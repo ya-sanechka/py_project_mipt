@@ -41,7 +41,7 @@ async def main():
     print("\nСписок групп:")
     i = 1
     for g in groups:
-        print(f"{1}. ID: {g['id']} название: {g['name']}")
+        print(f"{i}. ID: {g['id']} название: {g['name']}")
         i += 1
 
 if __name__ == "__main__":
