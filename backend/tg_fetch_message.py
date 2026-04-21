@@ -28,7 +28,7 @@ async def get_chat_users(chat_id):
             'full_name': first_name + second_name
         }
     user = await client.get_me()
-    save_json(chat_users, f"{user.username}_chat_{chat.title}_users.json")
+    save_json(chat_users, f"{user.username}_chat_{chat_id}_users.json")
     return chat_users
 async def fetch_messages(chat_id, limit=1000):
     chat_users = await get_chat_users(chat_id)
@@ -70,10 +70,8 @@ async def fetch_messages(chat_id, limit=1000):
             }
             messages.append(m_dict)
     user = await client.get_me()
-    save_json(messages, f"{user.username}_messages_chat{chat.title}.json")
+    save_json(messages, f"{user.username}_messages_chat_{chat_id}.json")
     return messages
-
-#async def get_reaction_senders() можно
 
 def save_json(data, filename):
     with open(filename, 'w', encoding='utf-8') as f:
