@@ -23,7 +23,7 @@ async def get_chat_users(chat_id):
         first_name = user.first_name if user.first_name else ''
         second_name = user.last_name if user.last_name else ''
         user_name = user.username
-        chat_users[user.id] = {
+        chat_users[int(user.id)] = {
             'username': f"@{user_name}",
             'full_name': first_name + second_name
         }
@@ -54,21 +54,21 @@ async def fetch_messages(chat_id, limit=1000):
                         'count': el.count
                     }
                     reactions.append(r_dict)
-
-            m_dict = {
-                'm_id': m.id,
-                'date': m.date.isoformat(),
-                'sender_id': m.sender_id,
-                'sender_username': chat_users[m.sender_id]['username'],
-                'sender_full_name': chat_users[m.sender_id]['full_name'],
-                'text': m.text,
-                'reply_m_id': m.reply_to_msg_id,
-                'mentioned_users': mentioned,
-                'reactions': reactions
-                #мб еще полей добавить
-
-            }
-            messages.append(m_dict)
+            if m.sender_id in chat_users:
+                user_info = chat_users[m.sender_id]
+                m_dict = {
+                    'm_id': m.id,
+                    'date': m.date.isoformat(),
+                    'sender_id': m.sender_id,
+                    'sender_username': user_info['username'],
+                    'sender_full_name': user_info['full_name'],
+                    'text': m.text,
+                    'reply_m_id': m.reply_to_msg_id,
+                    'mentioned_users': mentioned,
+                    'reactions': reactions
+                    #мб еще полей добавить
+                }
+                messages.append(m_dict)
     user = await client.get_me()
     save_json(messages, f"{user.username}_messages_chat_{chat_id}.json")
     return messages
@@ -76,3 +76,7 @@ async def fetch_messages(chat_id, limit=1000):
 def save_json(data, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+def load_json(filename):
+    with open(filename, 'r', encoding='utf-8') as f:
+        return json.load(f)
