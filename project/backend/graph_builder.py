@@ -156,4 +156,5 @@ def compute_metrics(G):
         })
     metrics['top_central_users'] = top_users
 
+
     return metrics
