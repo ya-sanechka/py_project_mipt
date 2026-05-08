@@ -1,9 +1,7 @@
 import json
 
-from tg_client import client, authorize
 users_cache = {}
-async def get_groups():
-    await authorize()
+async def get_groups(client):
     groups = []
     async for dialog in client.iter_dialogs():
         if dialog.is_group or (dialog.is_channel and dialog.entity.megagroup):
@@ -15,8 +13,7 @@ async def get_groups():
     save_json(groups, f"{user.username}_groups.json")
     return groups
 
-async def get_chat_users(chat_id):
-    await authorize()
+async def get_chat_users(client, chat_id):
     chat_users = {}
     chat = await client.get_entity(chat_id)
     async for user in client.iter_participants(chat):
@@ -30,9 +27,8 @@ async def get_chat_users(chat_id):
     user = await client.get_me()
     save_json(chat_users, f"{user.username}_chat_{chat_id}_users.json")
     return chat_users
-async def fetch_messages(chat_id, limit=1000):
-    chat_users = await get_chat_users(chat_id)
-    await authorize()
+async def fetch_messages(client, chat_id, limit=1000):
+    chat_users = await get_chat_users(client, chat_id)
     messages = []
     chat = await client.get_entity(chat_id)
     async for m in client.iter_messages(chat, limit=limit):
