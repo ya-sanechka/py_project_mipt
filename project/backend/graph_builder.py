@@ -81,7 +81,8 @@ async def build_graph(client, chat_id, limit=1000):
     return {
         'nodes': nodes_list,
         'edges': edges_list,
-        'metrics': metrics
+        'metrics': metrics,
+        'users': users_dict
     }
 
 
