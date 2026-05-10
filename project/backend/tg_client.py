@@ -1,4 +1,6 @@
 import os
+from typing import Dict, Union
+
 from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
@@ -8,7 +10,7 @@ from telethon.errors import (
     PhoneCodeInvalidError,
     PhoneCodeExpiredError,
     PasswordHashInvalidError,
-    FloodWaitError
+    FloodWaitError,
 )
 
 load_dotenv()
@@ -18,17 +20,40 @@ SESSION_NAME = "new_session"
 
 proxy_tuple = ('mtproxy.neverspy.online', 443, 'dde8653d2faf392a302d829d79537abbe7')
 
-def create_client():
+
+def create_client() -> TelegramClient:
+    """
+    Создаёт новый экземпляр TelegramClient
+
+    Возвращает:
+        TelegramClient: объект клиента.
+    """
     return TelegramClient(
         "new_session",
         API_ID,
         API_HASH,
         connection=ConnectionTcpMTProxyRandomizedIntermediate,
-        proxy=proxy_tuple
+        proxy=proxy_tuple,
     )
 
 
-async def request_code(client, phone):
+async def request_code(client: TelegramClient, phone: str) -> Dict[str, Union[str, int, float]]:
+    """
+    Авторизация (1 шаг) - Отправляет код подтверждения на указанный номер телефона.
+
+    Аргументы функции:
+        client: TelegramClient
+        phone: номер телефона (строка типа '+7...').
+
+    Возвращает:
+        Словарь с ключами:
+            - status: 'code_sent' или 'error'
+            - message: описание результата
+            - timeout: время ожидания до повторного запроса кода (если не придет)
+            - phone_code_hash: хэш, нужен для входа
+            - error_type: тип ошибки (если status='error')
+            - wait_seconds: сколько секунд нужно подождать при flood_wait ошибке
+    """
     if not client.is_connected():
         await client.connect()
     try:
@@ -37,60 +62,96 @@ async def request_code(client, phone):
             "status": "code_sent",
             "message": f"Код отправлен на {phone}",
             "timeout": result.timeout,
-            "phone_code_hash": result.phone_code_hash
+            "phone_code_hash": result.phone_code_hash,
         }
     except PhoneNumberInvalidError:
         return {
             "status": "error",
             "error_type": "invalid_phone",
-            "message": "Неверный номер телефона."
+            "message": "Неверный номер телефона.",
         }
     except FloodWaitError as e:
         return {
             "status": "error",
             "error_type": "flood_wait",
             "message": f"Слишком много попыток. Подождите {e.seconds} секунд.",
-            "wait_seconds": e.seconds
+            "wait_seconds": e.seconds,
         }
 
-async def sign_in(client, phone, code, phone_code_hash):
+
+async def sign_in(client: TelegramClient, phone: str, code: str, phone_code_hash: str) -> Dict[str, Union[str, None]]:
+    """
+    Авторизация (2 шаг): выполняет вход по коду подтверждения.
+    Если аккаунт защищён двухфакторной аутентификацией, возвращает статус 'password_needed'.
+
+    Аргументы функции:
+        client: TelegramClient.
+        phone: номер телефона.
+        code: код подтверждения из Telegram.
+        phone_code_hash: хэш, полученный от request_code.
+
+    Возвращает:
+        Словарь с ключами:
+            - status: 'authorized' / 'password_needed' / 'error'
+            - user: строка вида "Имя (@username)" при успехе
+            - message: описание
+            - error_type: тип ошибки (при status='error')
+            - wait_seconds: сколько ждать секунд при flood_wait
+    """
     if not client.is_connected():
         await client.connect()
+
+
 
     try:
         await client.sign_in(phone, code, phone_code_hash=phone_code_hash)
         me = await client.get_me()
         return {
             "status": "authorized",
-            "user": f"{me.first_name} (@{me.username})"
+            "user": f"{me.first_name} (@{me.username})",
         }
     except PhoneCodeInvalidError:
         return {
             "status": "error",
             "error_type": "invalid_code",
-            "message": "Неверный код подтверждения. Попробуйте ещё раз."
+            "message": "Неверный код подтверждения. Попробуйте ещё раз.",
         }
     except PhoneCodeExpiredError:
         return {
             "status": "error",
             "error_type": "code_expired",
-            "message": "Срок действия кода истёк. Запросите новый код."
+            "message": "Срок действия кода истёк. Запросите новый код.",
         }
     except SessionPasswordNeededError:
         return {
             "status": "password_needed",
-            "message": "Требуется пароль двухфакторной аутентификации"
+            "message": "Требуется пароль двухфакторной аутентификации",
         }
     except FloodWaitError as e:
         return {
             "status": "error",
             "error_type": "flood_wait",
             "message": f"Слишком много попыток. Подожди {e.seconds} секунд.",
-            "wait_seconds": e.seconds
+            "wait_seconds": e.seconds,
         }
 
 
-async def send_password(client, password):
+async def send_password(client: TelegramClient, password: str) -> Dict[str, Union[str, None]]:
+    """
+    Авторизация (3 шаг) (при необходимости пароля): отправляет пароль двухфакторной аутентификации.
+
+    Аргументы функции:
+        client: TelegramClient.
+        password: пароль двухфакторной аутентификации.
+
+    Возвращает:
+        Словарь с ключами:
+            - status: 'authorized' / 'error'
+            - user: пользователь, при успехе
+            - message: описание
+            - error_type: тип ошибки (при status='error')
+            - wait_seconds: при flood_wait
+    """
     if not client.is_connected():
         await client.connect()
 
@@ -99,24 +160,37 @@ async def send_password(client, password):
         me = await client.get_me()
         return {
             "status": "authorized",
-            "user": f"{me.first_name} (@{me.username})"
+            "user": f"{me.first_name} (@{me.username})",
         }
     except PasswordHashInvalidError:
         return {
             "status": "error",
             "error_type": "invalid_password",
-            "message": "Неверный пароль. Попробуй ещё раз."
+            "message": "Неверный пароль. Попробуй ещё раз.",
         }
     except FloodWaitError as e:
         return {
             "status": "error",
             "error_type": "flood_wait",
             "message": f"Слишком много попыток. Подожди {e.seconds} секунд.",
-            "wait_seconds": e.seconds
+            "wait_seconds": e.seconds,
         }
 
 
-async def tg_authorized(client):
+async def tg_authorized(client: TelegramClient):  #возвращает объект типа User
+
+    """
+    Проверяет, авторизован ли клиент, и возвращает объект текущего пользователя.
+    Иначе вызывает исключение.
+
+    Аргументы функции:
+        client: TelegramClient.
+
+    Возвращает:
+        Объект User с информацией о текущем пользователе.
+
+    Exception: если пользователь не авторизован.
+    """
     if not client.is_connected():
         await client.connect()
     if not await client.is_user_authorized():
