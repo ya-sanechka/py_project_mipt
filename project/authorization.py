@@ -8,7 +8,7 @@ from backend.tg_client import request_code, sign_in, create_client, send_passwor
 import re
 import asyncio
 
-async def authorization():
+def authorization(runner):
     """Функция предоставляет интерфейс для авторизации на сайт
 
     Аргументов функция не принимает, просто запускается процесс авторизации при вызове
@@ -22,6 +22,8 @@ async def authorization():
 
     После успещного захода на сайт пользователю открывается основаная страничка сайта"""
 
+    client = runner.client
+
     if "step" not in st.session_state:
         st.session_state.step = "phone"
 
@@ -33,8 +35,7 @@ async def authorization():
 
         if st.button('Продолжить'):
             if phone_number:
-                client = create_client()
-                phone_response = asyncio.run(request_code(client, phone_number))
+                phone_response = runner.run(request_code(client, phone_number))
 
                 if phone_response["status"] == "error":
                     if phone_response["error_type"] == "invalid_phone":
@@ -58,8 +59,7 @@ async def authorization():
 
         if st.button('Продолжить', key='continue_btn'):
             if telegram_code:
-                client = create_client()
-                code_response = asyncio.run(sign_in(
+                code_response = runner.run(sign_in(
                     client,
                     st.session_state.phone,
                     telegram_code,
@@ -86,14 +86,12 @@ async def authorization():
 
     elif st.session_state.step == "password":
         st.title("Двухфакторная аутентификация")
-
         password = st.text_input("Введите пароль", type="password")
         st.session_state.password = password
 
         if st.button("Войти"):
             if password:
-                client = create_client()
-                password_response = asyncio.run(send_password(client, password))
+                password_response = runner.run(send_password(client, password))
 
                 if password_response["status"] == "error":
                     if password_response["error_type"] == "invalid_password":

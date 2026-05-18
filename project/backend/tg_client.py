@@ -16,20 +16,16 @@ from telethon.errors import (
 load_dotenv()
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-SESSION_NAME = "new_session"
 
 proxy_tuple = ('mtproxy.neverspy.online', 443, 'dde8653d2faf392a302d829d79537abbe7')
 
 
-def create_client() -> TelegramClient:
+def create_client(session_name: str = "new_session") -> TelegramClient:
     """
-    Создаёт новый экземпляр TelegramClient
-
-    Возвращает:
-        TelegramClient: объект клиента.
+    Создаёт новый экземпляр TelegramClient с указанным именем сессии.
     """
     return TelegramClient(
-        "new_session",
+        session_name,
         API_ID,
         API_HASH,
         connection=ConnectionTcpMTProxyRandomizedIntermediate,

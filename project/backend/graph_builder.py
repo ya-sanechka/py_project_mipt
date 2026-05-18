@@ -1,5 +1,5 @@
 import networkx as nx
-from tg_fetch_message import get_chat_users, fetch_messages
+from backend.tg_fetch_message import get_chat_users, fetch_messages
 
 async def build_graph(client, chat_id, limit=1000):
     """
