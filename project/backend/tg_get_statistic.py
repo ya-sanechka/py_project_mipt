@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-from tg_fetch_message import get_chat_users, fetch_messages
+from backend.tg_fetch_message import get_chat_users, fetch_messages
 
 
 async def get_statistic(client: Any, chat_id: int, limit: int = 1000) -> Dict[str, Any]:

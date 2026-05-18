@@ -1,5 +1,7 @@
 from typing import Any
 import json
+from pathlib import Path
+import os
 
 users_cache: dict[int, Any] = {}
 
@@ -109,6 +111,10 @@ async def fetch_messages(client: Any, chat_id: int, limit: int = 1000) -> list[d
     save_json(messages, f"{user.username}_messages_chat_{chat_id}.json")
     return messages
 
+DATA_DIR = "data"
+
+def ensure_data_dir() -> None:
+    Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 
 def save_json(data: Any, filename: str) -> None:
     """
@@ -118,7 +124,9 @@ def save_json(data: Any, filename: str) -> None:
         data (Any): Данные для JSON (обычно list или dict).
         filename (str): Путь к сохраняемому файлу.
     """
-    with open(filename, 'w', encoding='utf-8') as f:
+    ensure_data_dir()
+    filepath = os.path.join(DATA_DIR, filename)
+    with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
@@ -132,5 +140,6 @@ def load_json(filename: str) -> Any:
     Возвращает:
         Any: структуры данных Python (обычно list или dict).
     """
-    with open(filename, 'r', encoding='utf-8') as f:
+    filepath = os.path.join(DATA_DIR, filename)
+    with open(filepath, 'r', encoding='utf-8') as f:
         return json.load(f)
