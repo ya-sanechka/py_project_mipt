@@ -1,7 +1,9 @@
 import os
 from typing import Dict, Union
+from pathlib import Path
 
 from dotenv import load_dotenv
+from pip._internal.utils.misc import ensure_dir
 from telethon import TelegramClient
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 from telethon.errors import (
@@ -19,13 +21,16 @@ API_HASH = os.getenv("API_HASH")
 
 proxy_tuple = ('mtproxy.neverspy.online', 443, 'dde8653d2faf392a302d829d79537abbe7')
 
+SESSIONS_DIR = "sessions"
 
 def create_client(session_name: str = "new_session") -> TelegramClient:
     """
     Создаёт новый экземпляр TelegramClient с указанным именем сессии.
     """
+    ensure_dir(SESSIONS_DIR)
+    session_path = os.path.join(SESSIONS_DIR, session_name)
     return TelegramClient(
-        session_name,
+        session_path,
         API_ID,
         API_HASH,
         connection=ConnectionTcpMTProxyRandomizedIntermediate,

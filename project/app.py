@@ -6,6 +6,10 @@ from backend.telethon_runner import TelethonRunner
 from backend.tg_fetch_message import get_groups
 from backend.graph_builder import build_graph
 from pyvis.network import Network
+import plotly.express as px
+import pandas as pd
+
+from backend.tg_get_statistic import get_statistic
 
 if "session_name" not in st.session_state:
     st.session_state.session_name = f"session_{uuid.uuid4().hex[:8]}"
@@ -56,10 +60,21 @@ def chat_stats():
     group_names = list(st.session_state.group_options.keys())
     if "selected_group_name" not in st.session_state:
         st.session_state.selected_group_name = group_names[0]
+    if "message_limit" not in st.session_state:
+        st.session_state.message_limit = 1000
 
     selected_group_id = st.selectbox("Выберите группу",
                                      group_names,
                                      key="selected_group_name")
+
+    limit = st.number_input("Введите количество сообщений на основе, которых строится граф",
+                            min_value=500,
+                            max_value=5000,
+                            value=st.session_state.message_limit,
+                            step=100,
+                            key="message_limit")
+
+    st.caption('Не рекомендуется ставить больше 1500')
 
 def profile():
     pass
@@ -68,33 +83,28 @@ def graph_vizualization():
     """
     Отображает страницу «Граф отношений» в приложении Streamlit.
 
-    Функция позволяет пользователю выбрать группу (чат) из списка, задать количество
-    сообщений для анализа, построить ориентированный граф взаимодействий между участниками
-    и визуализировать его с помощью библиотеки pyvis.
+    Функция предоставляет интерфейс для:
+        1. Выбора группы (чата) из списка диалогов пользователя.
+        2. Установки лимита сообщений для анализа (от 500 до 5000).
+        3. Построения ориентированного графа взаимодействий между участниками чата.
+        4. Визуализации графа с помощью библиотеки pyvis (интерактивный граф).
+        5. Вывода статистики графа: количество узлов/рёбер, плотность, доля в главном ядре,
+           сообщества (алгоритм Лувена), топ центральности (Degree, PageRank, Betweenness),
+           точки сочленения, мосты.
 
-    Работа функции полностью основана на `st.session_state` для сохранения состояния
-    между переключениями страниц и перезапусками скрипта:
-        - `group_options` : dict — сопоставление названий групп с их идентификаторами.
-        - `selected_group_name` : str — название текущей выбранной группы.
-        - `message_limit` : int — количество последних сообщений, используемых для построения графа.
-        - `graph_data` : dict или None — результат работы `build_graph` (узлы, рёбра, метрики).
+    Использует `st.session_state` для кэширования:
+        - group_options : dict – сопоставление названий групп с их ID.
+        - selected_group_name : str – текущая выбранная группа (для сохранения между переходами).
+        - message_limit : int – лимит сообщений (сохраняется в session_state).
+        - graph_data : dict или None – результат построения графа (nodes, edges, metrics, users).
 
-    Алгоритм работы:
-        1. При первом вызове (или если данные групп отсутствуют) загружает список групп через `get_groups`
-           и сохраняет его в `st.session_state.group_options`.
-        2. Инициализирует недостающие ключи `selected_group_name`, `message_limit`, `graph_data`
-           значениями по умолчанию.
-        3. При нажатии кнопки вызывает `build_graph` с выбранным ID группы и лимитом,
-           сохраняет результат в `st.session_state.graph_data`.
-        4. Если `graph_data` не `None`:
-            - создаёт интерактивный граф через `pyvis.Network`,
-            - добавляет узлы (участники) и рёбра (взаимодействия) с весами и подписями,
-        5. Иначе выводит информационное сообщение.
+    Параметры (получаемые из внешнего окружения):
+        - runner : TelethonRunner – объект для синхронного запуска асинхронных функций.
+        - client : TelegramClient – авторизованный клиент Telegram (доступен как runner.client).
 
     Returns:
-        None. Функция непосредственно рендерит интерфейс и график в Streamlit.
+        None. Функция непосредственно рендерит элементы интерфейса и визуализации в Streamlit.
     """
-
     st.title("Граф общения")
 
     if "group_options" not in st.session_state:
@@ -103,26 +113,31 @@ def graph_vizualization():
 
     group_names = list(st.session_state.group_options.keys())
     if "selected_group_name" not in st.session_state:
-        st.session_state.selected_group_name = group_names[0]
+        st.session_state.selected_group_name = group_names[0] if group_names else None
     if "message_limit" not in st.session_state:
         st.session_state.message_limit = 1000
     if "graph_data" not in st.session_state:
         st.session_state.graph_data = None
 
-    selected_group_id = st.selectbox("Выберите группу",
-                                     group_names,
-                                     key="selected_group_name")
+    selected_group_name = st.selectbox(
+        "Выберите группу",
+        group_names,
+        key="selected_group_name"
+    )
+    selected_group_id = st.session_state.group_options[selected_group_name]
 
-    limit = st.number_input("Введите количество сообщений на основе, которых строится граф",
-                          min_value = 500,
-                          max_value = 5000,
-                          value = st.session_state.message_limit,
-                          step = 100,
-                          key = "message_limit")
+    limit = st.number_input(
+        "Введите количество сообщений для построения графа",
+        min_value=500,
+        max_value=5000,
+        value=st.session_state.message_limit,
+        step=100,
+        key="message_limit"
+    )
+    st.caption("Не рекомендуется ставить больше 1500 (может быть долго).")
 
-    st.caption('Не рекомендуется ставить больше 1500')
     if st.button("Построить граф"):
-        with st.spinner("Подождите, идет построение графа"):
+        with st.spinner("Подождите, идёт построение графа..."):
             graph = runner.run(build_graph(client, selected_group_id, int(limit)))
             st.session_state.graph_data = graph
 
@@ -130,8 +145,11 @@ def graph_vizualization():
         graph = st.session_state.graph_data
         nodes = graph["nodes"]
         edges = graph["edges"]
+        metrics = graph["metrics"]
+        users_dict = graph["users"]
 
-        net = Network(height="700px", width="700px", directed=True, notebook=False)
+        st.subheader("Визуализация взаимодействий")
+        net = Network(height="700px", width="100%", directed=True, notebook=False)
         for node in nodes:
             net.add_node(node["id"], node["full_name"], node["username"])
         for edge in edges:
@@ -151,10 +169,83 @@ def graph_vizualization():
         }"""
         )
         html = net.generate_html()
-        st.components.v1.html(html, height=750, width=750, scrolling=True)
-    else:
-        st.info("Нажмите «Построить граф», чтобы отобразить визуализацию.")
+        st.components.v1.html(html, height=750, scrolling=True)
 
+        st.subheader("Статистика социального графа")
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Участников", metrics.get("nodes_count", 0))
+        col2.metric("Связей (рёбер)", metrics.get("edges_count", 0))
+        col3.metric("Плотность", f"{metrics.get('density', 0):.4f}")
+
+        if metrics.get("edges_count", 0) > 0:
+            giant = metrics.get("giant_component_ratio", 0)
+            st.metric("Доля участников в главном ядре", f"{giant:.1%}")
+
+            communities = metrics.get("communities", [])
+            with st.expander("Сообщества (алгоритм Лувена)"):
+                for comm in communities[:5]:
+                    member_names = []
+                    for uid in comm["members"][:10]:
+                        name = users_dict.get(uid, {}).get("full_name", f"id{uid}")
+                        member_names.append(name)
+                    members_preview = ", ".join(member_names)
+                    st.write(f"Сообщество {comm['community_id']} – {comm['size']} участников: {members_preview}")
+
+            def get_name(uid):
+                return users_dict.get(uid, {}).get("full_name", f"id{uid}")
+
+            top_central = metrics.get("top_central_users", [])
+            if top_central:
+                st.write("Самые центральные участники (Degree Centrality)")
+                df_cent = pd.DataFrame([
+                    {"Участник": get_name(item["user_id"]), "Центральность": item["centrality"]}
+                    for item in top_central
+                ])
+                st.dataframe(df_cent, use_container_width=True)
+
+            top_pr = metrics.get("top_pagerank", [])
+            if top_pr:
+                st.write("Самые авторитетные участники (PageRank)")
+                df_pr = pd.DataFrame([
+                    {"Участник": get_name(item["user_id"]), "PageRank": item["score"]}
+                    for item in top_pr
+                ])
+                st.dataframe(df_pr, use_container_width=True)
+
+            top_btw = metrics.get("top_betweenness", [])
+            if top_btw:
+                st.write("Главные связующие звенья (Betweenness Centrality)")
+                df_btw = pd.DataFrame([
+                    {"Участник": get_name(item["user_id"]), "Betweenness": item["score"]}
+                    for item in top_btw
+                ])
+                st.dataframe(df_btw, use_container_width=True)
+
+            articulation = metrics.get("articulation_points", [])
+            if articulation:
+                art_names = [get_name(uid) for uid in articulation[:20]]
+                st.write("Точки сочленения (при удалении которых граф распадается)")
+                st.write(", ".join(art_names))
+                if len(articulation) > 20:
+                    st.write(f"... и ещё {len(articulation) - 20}")
+
+            bridges = metrics.get("bridges", [])
+            if bridges:
+                bridge_str = []
+                for u, v in bridges[:20]:
+                    name_u = get_name(u)
+                    name_v = get_name(v)
+                    bridge_str.append(f"{name_u} {name_v}")
+                st.write("(связи, разрывающие граф)")
+                st.write(", ".join(bridge_str))
+                if len(bridges) > 20:
+                    st.write(f"... и ещё {len(bridges) - 20}")
+
+        else:
+            st.warning("Граф не содержит рёбер (в выбранном диапазоне нет взаимодействий).")
+    else:
+        st.info("Нажмите «Построить граф», чтобы отобразить визуализацию и статистику.")
 
 
 
