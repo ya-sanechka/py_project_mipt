@@ -1,5 +1,5 @@
 import networkx as nx
-from backend.tg_fetch_message import get_chat_users, fetch_messages
+from tg_fetch_message import get_chat_users, fetch_messages
 
 async def build_graph(client, chat_id, limit=1000):
     """
@@ -85,6 +85,8 @@ async def build_graph(client, chat_id, limit=1000):
         'users': users_dict
     }
 
+import networkx as nx
+import networkx.algorithms.community as nx_comm
 
 def compute_metrics(G):
     """
@@ -98,64 +100,97 @@ def compute_metrics(G):
             - 'nodes_count': общее количество узлов (участников)
             - 'edges_count': общее количество направленных рёбер (связей)
             - 'density': плотность графа (от 0 до 1, где 1 = клика)
-            - 'strongly_connected_components': список КСС, каждая компонента — dict с ключами 'size' и 'members'
-            (оставляем только компоненты с размером > 1)
-            - 'articulation_points': список id участников - точек сочленения (люди, при удалении которых граф перестает быть связным)
-            - 'bridges': список мостов — пары людей, при удалении связи между которыми граф перестает быть связным.
-            - 'top_central_users': список из 10 самых центральных участников по степени (degree centrality), каждый элемент — dict с ключами 'user_id' и 'centrality': степень центральности (от 0 до 1)
+            - 'giant_component_ratio': доля участников, состоящих в основном ядре обсуждения
+            - 'communities': список сообществ (алгоритм Лувена), каждое компонента — dict с ключами 'community_id', 'size' и 'members'
+            - 'top_central_users': список из 10 самых центральных участников по степени (degree centrality)
+            - 'top_pagerank': список из 10 самых авторитетных участников по PageRank
+            - 'top_betweenness': список из 10 главных связующих звеньев (betweenness centrality)
+            - 'articulation_points': список id участников - точек сочленения
+            - 'bridges': список мостов — пары людей, при удалении связи между которыми граф перестает быть связным
     """
     metrics = {}
-    #везде ниже когда работаем с узлом как с интом, там лежит айдишник пользователя :)))
 
-    # число точек, ребер, плотность связей в графе
     metrics['nodes_count'] = G.number_of_nodes()
     metrics['edges_count'] = G.number_of_edges()
-    metrics['density'] = round(nx.density(G), 4) # считает плотность графа от 0 до 1, где 1 - клика
+    metrics['density'] = round(nx.density(G), 4)
 
-    # ищем компоненты сильной связности
-    KSS_list = list(nx.strongly_connected_components(G)) #список КСС
-    groups_components = []
-    for comp in KSS_list:
-        if len(comp) > 1:
+    if metrics['edges_count'] == 0:
+        return metrics
+
+    wcc_list = list(nx.weakly_connected_components(G))
+    if wcc_list:
+        largest_wcc = max(wcc_list, key=len)
+        metrics['giant_component_ratio'] = round(len(largest_wcc) / metrics['nodes_count'], 4)
+    else:
+        metrics['giant_component_ratio'] = 0
+
+    undirected_G = G.to_undirected()
+
+    communities = nx_comm.louvain_communities(undirected_G, weight='weight')
+    group_components = []
+    for i, с in enumerate(communities):
+        if len(с) > 1:
             members = []
-            for x in comp:
+            for x in с:
                 members.append(int(x))
-            groups_components.append({
-                'size': len(comp),
+            group_components.append({
+                'community_id': i,
+                'size': len(с),
                 'members': members
             })
-    metrics['strongly_connected_components'] = groups_components
+    group_components.sort(key=lambda x: x['size'], reverse=True)
+    metrics['communities'] = group_components
 
 
-    undirected_G = G.to_undirected() # делаем неоритентироанную копию для поиска некоторых метрик
-
-    # ищем точки сочленения (неориентированный граф)
-    articulation_points = list(nx.articulation_points(undirected_G)) #точки сочлененения
-    ap_list = []
-    for x in articulation_points:
-        ap_list.append(int(x))
-    metrics['articulation_points'] = ap_list
-
-    # ищем мосты (неориентированный граф)
-    bridges = list(nx.bridges(undirected_G))
-    bridge_pairs = []
-    for u, v in bridges:
-        bridge_pairs.append((int(u), int(v)))
-    metrics['bridges'] = bridge_pairs
-
-    # ищем топ 10 центральных узлов-юзеров (степень центральности = доля существующих связей от всевозможных)
     degree_cent = nx.degree_centrality(G)
-    cent_items = []
+    cent_p = []
     for user, deg in degree_cent.items():
-        cent_items.append((user, deg))
-    cent_items.sort(key=lambda pair: pair[1], reverse=True)
+        cent_p.append((user, deg))
+    cent_p.sort(key=lambda p: p[1], reverse=True)
     top_users = []
-    for user, deg in cent_items[:10]:
+    for user, deg in cent_p[:10]:
         top_users.append({
             'user_id': int(user),
             'centrality': round(deg, 4)
         })
     metrics['top_central_users'] = top_users
 
+    pagerank_stat = nx.pagerank(G, weight='weight', max_iter=100)
+    pagerank_p = []
+    for user, v in pagerank_stat.items():
+        pagerank_p.append((user, v))
+    pagerank_p.sort(key=lambda p: p[1], reverse=True)
+    top_pr = []
+    for user, v in pagerank_p[:10]:
+        top_pr.append({
+            'user_id': int(user),
+            'score': round(v, 4)
+        })
+    metrics['top_pagerank'] = top_pr
+
+    btw = nx.betweenness_centrality(G, weight='weight')
+    bw_p = []
+    for user, v in btw.items():
+        bw_p.append((user, v))
+    bw_p.sort(key=lambda p: p[1], reverse=True)
+    top_btw = []
+    for user, v in bw_p[:10]:
+        top_btw.append({
+            'user_id': int(user),
+            'score': round(v, 4)
+        })
+    metrics['top_betweenness'] = top_btw
+
+    articulation_points = list(nx.articulation_points(undirected_G))
+    ap_list = []
+    for x in articulation_points:
+        ap_list.append(int(x))
+    metrics['articulation_points'] = ap_list
+
+    bridges = list(nx.bridges(undirected_G))
+    bridge_pairs = []
+    for u, v in bridges:
+        bridge_pairs.append((int(u), int(v)))
+    metrics['bridges'] = bridge_pairs
 
     return metrics
