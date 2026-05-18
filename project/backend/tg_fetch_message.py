@@ -1,6 +1,17 @@
 import json
+from functools import wraps
+
+def ensure_connection(func):
+    @wraps(func)
+    async def wrapper(client, *args, **kwargs):
+        if not client.is_connected():
+            await client.connect()
+        return await func(client, *args, **kwargs)
+    return wrapper
 
 users_cache = {}
+
+@ensure_connection
 async def get_groups(client):
     groups = []
     async for dialog in client.iter_dialogs():
@@ -13,6 +24,7 @@ async def get_groups(client):
     save_json(groups, f"{user.username}_groups.json")
     return groups
 
+@ensure_connection
 async def get_chat_users(client, chat_id):
     chat_users = {}
     chat = await client.get_entity(chat_id)
@@ -27,6 +39,8 @@ async def get_chat_users(client, chat_id):
     user = await client.get_me()
     save_json(chat_users, f"{user.username}_chat_{chat_id}_users.json")
     return chat_users
+
+@ensure_connection
 async def fetch_messages(client, chat_id, limit=1000):
     chat_users = await get_chat_users(client, chat_id)
     messages = []
