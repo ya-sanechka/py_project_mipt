@@ -1,18 +1,19 @@
+from typing import Any
 import json
-from functools import wraps
 
-def ensure_connection(func):
-    @wraps(func)
-    async def wrapper(client, *args, **kwargs):
-        if not client.is_connected():
-            await client.connect()
-        return await func(client, *args, **kwargs)
-    return wrapper
+users_cache: dict[int, Any] = {}
 
-users_cache = {}
+async def get_groups(client: Any) -> list[dict[str, Any]]:
+    """
+    Получает список всех групп текущего пользователя,
+    сохраняет его в файл и возвращает результат.
 
-@ensure_connection
-async def get_groups(client):
+    Аргументы:
+        client (Any): Авторизованный клиент Telegram (TelegramClient).
+
+    Возвращает:
+        list[dict[str, Any]]: Список словарей с данными групп (id, name).
+    """
     groups = []
     async for dialog in client.iter_dialogs():
         if dialog.is_group or (dialog.is_channel and dialog.entity.megagroup):
@@ -24,8 +25,20 @@ async def get_groups(client):
     save_json(groups, f"{user.username}_groups.json")
     return groups
 
-@ensure_connection
-async def get_chat_users(client, chat_id):
+
+async def get_chat_users(client: Any, chat_id: int) -> dict[int, dict[str, Any]]:
+    """
+    Получает список участников указанного чата, формирует словарь с их данными,
+    сохраняет его в файл и возвращает результат.
+
+    Аргументы:
+        client (Any): Авторизованный клиент Telegram (TelegramClient).
+        chat_id (int): Идентификатор чата.
+
+    Возвращает:
+        dict[int, dict[str, Any]]: Словарь, где ключ — ID пользователя (int),
+            а значение — словарь с его username и full_name.
+    """
     chat_users = {}
     chat = await client.get_entity(chat_id)
     async for user in client.iter_participants(chat):
@@ -40,8 +53,22 @@ async def get_chat_users(client, chat_id):
     save_json(chat_users, f"{user.username}_chat_{chat_id}_users.json")
     return chat_users
 
-@ensure_connection
-async def fetch_messages(client, chat_id, limit=1000):
+
+async def fetch_messages(client: Any, chat_id: int, limit: int = 1000) -> list[dict[str, Any]]:
+    """
+    Скачивает историю сообщений из чата, извлекает данные (упоминания, реакции),
+    сохраняет историю в файл и возвращает список обработанных сообщений.
+
+    Аргументы:
+        client (Any): Авторизованный клиент Telegram (TelegramClient).
+        chat_id (int): Идентификатор чата.
+        limit (int, optional): Максимальное количество сообщений для выгрузки.
+            По умолчанию 1000.
+
+    Возвращает:
+        list[dict[str, Any]]: Список словарей, каждый из которых содержит
+            данные сообщения (m_id, date, sender_id, text, и т.д.).
+    """
     chat_users = await get_chat_users(client, chat_id)
     messages = []
     chat = await client.get_entity(chat_id)
@@ -76,17 +103,34 @@ async def fetch_messages(client, chat_id, limit=1000):
                     'reply_m_id': m.reply_to_msg_id,
                     'mentioned_users': mentioned,
                     'reactions': reactions
-                    #мб еще полей добавить
                 }
                 messages.append(m_dict)
     user = await client.get_me()
     save_json(messages, f"{user.username}_messages_chat_{chat_id}.json")
     return messages
 
-def save_json(data, filename):
+
+def save_json(data: Any, filename: str) -> None:
+    """
+    Сохраняет переданные данные в файл формата JSON с поддержкой UTF-8.
+
+    Аргументы:
+        data (Any): Данные для JSON (обычно list или dict).
+        filename (str): Путь к сохраняемому файлу.
+    """
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-def load_json(filename):
+
+def load_json(filename: str) -> Any:
+    """
+    Загружает и десериализует данные из файла формата JSON.
+
+    Аргументы:
+        filename (str): Путь к считываемому файлу.
+
+    Возвращает:
+        Any: структуры данных Python (обычно list или dict).
+    """
     with open(filename, 'r', encoding='utf-8') as f:
         return json.load(f)
