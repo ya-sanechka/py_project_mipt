@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tg_fetch_message &#8212; Анализ чатов Telegram  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tg_fetch_message</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="n">users_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="get_groups">
+<a class="viewcode-back" href="../moduls.html#tg_fetch_message.get_groups">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_groups</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Получает список всех групп текущего пользователя,</span>
+<span class="sd">    сохраняет его в файл и возвращает результат.</span>
+
+<span class="sd">    Аргументы:</span>
+<span class="sd">        client (Any): Авторизованный клиент Telegram (TelegramClient).</span>
+
+<span class="sd">    Возвращает:</span>
+<span class="sd">        list[dict[str, Any]]: Список словарей с данными групп (id, name).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">dialog</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">iter_dialogs</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">dialog</span><span class="o">.</span><span class="n">is_group</span> <span class="ow">or</span> <span class="p">(</span><span class="n">dialog</span><span class="o">.</span><span class="n">is_channel</span> <span class="ow">and</span> <span class="n">dialog</span><span class="o">.</span><span class="n">entity</span><span class="o">.</span><span class="n">megagroup</span><span class="p">):</span>
+            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">dialog</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">dialog</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">})</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get_me</span><span class="p">()</span>
+    <span class="n">save_json</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">_groups.json&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">groups</span></div>
+
+
+
+<div class="viewcode-block" id="get_chat_users">
+<a class="viewcode-back" href="../moduls.html#tg_fetch_message.get_chat_users">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_chat_users</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Получает список участников указанного чата, формирует словарь с их данными,</span>
+<span class="sd">    сохраняет его в файл и возвращает результат.</span>
+
+<span class="sd">    Аргументы:</span>
+<span class="sd">        client (Any): Авторизованный клиент Telegram (TelegramClient).</span>
+<span class="sd">        chat_id (int): Идентификатор чата.</span>
+
+<span class="sd">    Возвращает:</span>
+<span class="sd">        dict[int, dict[str, Any]]: Словарь, где ключ — ID пользователя (int),</span>
+<span class="sd">            а значение — словарь с его username и full_name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">chat_users</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">chat</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get_entity</span><span class="p">(</span><span class="n">chat_id</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">iter_participants</span><span class="p">(</span><span class="n">chat</span><span class="p">):</span>
+        <span class="n">first_name</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">first_name</span> <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">first_name</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">second_name</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">last_name</span> <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">last_name</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">user_name</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span>
+        <span class="n">chat_users</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;@</span><span class="si">{</span><span class="n">user_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s1">&#39;full_name&#39;</span><span class="p">:</span> <span class="n">first_name</span> <span class="o">+</span> <span class="n">second_name</span>
+        <span class="p">}</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get_me</span><span class="p">()</span>
+    <span class="n">save_json</span><span class="p">(</span><span class="n">chat_users</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">_chat_</span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s2">_users.json&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">chat_users</span></div>
+
+
+
+<div class="viewcode-block" id="fetch_messages">
+<a class="viewcode-back" href="../moduls.html#tg_fetch_message.fetch_messages">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_messages</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Скачивает историю сообщений из чата, извлекает данные (упоминания, реакции),</span>
+<span class="sd">    сохраняет историю в файл и возвращает список обработанных сообщений.</span>
+
+<span class="sd">    Аргументы:</span>
+<span class="sd">        client (Any): Авторизованный клиент Telegram (TelegramClient).</span>
+<span class="sd">        chat_id (int): Идентификатор чата.</span>
+<span class="sd">        limit (int, optional): Максимальное количество сообщений для выгрузки.</span>
+<span class="sd">            По умолчанию 1000.</span>
+
+<span class="sd">    Возвращает:</span>
+<span class="sd">        list[dict[str, Any]]: Список словарей, каждый из которых содержит</span>
+<span class="sd">            данные сообщения (m_id, date, sender_id, text, и т.д.).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">chat_users</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_chat_users</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">)</span>
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">chat</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get_entity</span><span class="p">(</span><span class="n">chat_id</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">iter_messages</span><span class="p">(</span><span class="n">chat</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">mentioned</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">):</span>
+                        <span class="n">mentioned</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="n">reactions</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">reactions</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">reactions</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> <span class="s1">&#39;emoticon&#39;</span><span class="p">):</span>
+                        <span class="n">emoji</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">reaction</span><span class="o">.</span><span class="n">emoticon</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">emoji</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;premium_emoji_</span><span class="si">{</span><span class="n">el</span><span class="o">.</span><span class="n">reaction</span><span class="o">.</span><span class="n">document_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">r_dict</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;type_icon&#39;</span><span class="p">:</span> <span class="n">emoji</span><span class="p">,</span>
+                        <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="n">el</span><span class="o">.</span><span class="n">count</span>
+                    <span class="p">}</span>
+                    <span class="n">reactions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r_dict</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">sender_id</span> <span class="ow">in</span> <span class="n">chat_users</span><span class="p">:</span>
+                <span class="n">user_info</span> <span class="o">=</span> <span class="n">chat_users</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">sender_id</span><span class="p">]</span>
+                <span class="n">m_dict</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;m_id&#39;</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                    <span class="s1">&#39;sender_id&#39;</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">sender_id</span><span class="p">,</span>
+                    <span class="s1">&#39;sender_username&#39;</span><span class="p">:</span> <span class="n">user_info</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;sender_full_name&#39;</span><span class="p">:</span> <span class="n">user_info</span><span class="p">[</span><span class="s1">&#39;full_name&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+                    <span class="s1">&#39;reply_m_id&#39;</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">reply_to_msg_id</span><span class="p">,</span>
+                    <span class="s1">&#39;mentioned_users&#39;</span><span class="p">:</span> <span class="n">mentioned</span><span class="p">,</span>
+                    <span class="s1">&#39;reactions&#39;</span><span class="p">:</span> <span class="n">reactions</span>
+                <span class="p">}</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m_dict</span><span class="p">)</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get_me</span><span class="p">()</span>
+    <span class="n">save_json</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">_messages_chat_</span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">messages</span></div>
+
+
+<span class="n">DATA_DIR</span> <span class="o">=</span> <span class="s2">&quot;data&quot;</span>
+
+<div class="viewcode-block" id="ensure_data_dir">
+<a class="viewcode-back" href="../moduls.html#tg_fetch_message.ensure_data_dir">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ensure_data_dir</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">Path</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="save_json">
+<a class="viewcode-back" href="../moduls.html#tg_fetch_message.save_json">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_json</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Сохраняет переданные данные в файл формата JSON с поддержкой UTF-8.</span>
+
+<span class="sd">    Аргументы:</span>
+<span class="sd">        data (Any): Данные для JSON (обычно list или dict).</span>
+<span class="sd">        filename (str): Путь к сохраняемому файлу.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ensure_data_dir</span><span class="p">()</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="load_json">
+<a class="viewcode-back" href="../moduls.html#tg_fetch_message.load_json">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_json</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Загружает и десериализует данные из файла формата JSON.</span>
+
+<span class="sd">    Аргументы:</span>
+<span class="sd">        filename (str): Путь к считываемому файлу.</span>
+
+<span class="sd">    Возвращает:</span>
+<span class="sd">        Any: структуры данных Python (обычно list или dict).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Анализ чатов Telegram</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Александра Спиридонова, Илья Захаров.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

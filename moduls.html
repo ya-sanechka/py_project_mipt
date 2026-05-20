@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Модули backend &#8212; Анализ чатов Telegram  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-tg_fetch_message">
+<span id="backend"></span><h1>Модули backend<a class="headerlink" href="#module-tg_fetch_message" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_fetch_message.ensure_data_dir">
+<span class="sig-prename descclassname"><span class="pre">tg_fetch_message.</span></span><span class="sig-name descname"><span class="pre">ensure_data_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_fetch_message.html#ensure_data_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_fetch_message.ensure_data_dir" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_fetch_message.fetch_messages">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_fetch_message.</span></span><span class="sig-name descname"><span class="pre">fetch_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chat_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_fetch_message.html#fetch_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_fetch_message.fetch_messages" title="Link to this definition">¶</a></dt>
+<dd><p>Скачивает историю сообщений из чата, извлекает данные (упоминания, реакции),
+сохраняет историю в файл и возвращает список обработанных сообщений.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+</dl>
+<dl>
+<dt>Аргументы:</dt><dd><p>client (Any): Авторизованный клиент Telegram (TelegramClient).
+chat_id (int): Идентификатор чата.
+limit (int, optional): Максимальное количество сообщений для выгрузки.</p>
+<blockquote>
+<div><p>По умолчанию 1000.</p>
+</div></blockquote>
+</dd>
+<dt>Возвращает:</dt><dd><dl class="simple">
+<dt>list[dict[str, Any]]: Список словарей, каждый из которых содержит</dt><dd><p>данные сообщения (m_id, date, sender_id, text, и т.д.).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_fetch_message.get_chat_users">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_fetch_message.</span></span><span class="sig-name descname"><span class="pre">get_chat_users</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chat_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_fetch_message.html#get_chat_users"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_fetch_message.get_chat_users" title="Link to this definition">¶</a></dt>
+<dd><p>Получает список участников указанного чата, формирует словарь с их данными,
+сохраняет его в файл и возвращает результат.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>client (Any): Авторизованный клиент Telegram (TelegramClient).
+chat_id (int): Идентификатор чата.</p>
+</dd>
+<dt>Возвращает:</dt><dd><dl class="simple">
+<dt>dict[int, dict[str, Any]]: Словарь, где ключ — ID пользователя (int),</dt><dd><p>а значение — словарь с его username и full_name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_fetch_message.get_groups">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_fetch_message.</span></span><span class="sig-name descname"><span class="pre">get_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_fetch_message.html#get_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_fetch_message.get_groups" title="Link to this definition">¶</a></dt>
+<dd><p>Получает список всех групп текущего пользователя,
+сохраняет его в файл и возвращает результат.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>client (Any): Авторизованный клиент Telegram (TelegramClient).</p>
+</dd>
+<dt>Возвращает:</dt><dd><p>list[dict[str, Any]]: Список словарей с данными групп (id, name).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_fetch_message.load_json">
+<span class="sig-prename descclassname"><span class="pre">tg_fetch_message.</span></span><span class="sig-name descname"><span class="pre">load_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_fetch_message.html#load_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_fetch_message.load_json" title="Link to this definition">¶</a></dt>
+<dd><p>Загружает и десериализует данные из файла формата JSON.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>filename (str): Путь к считываемому файлу.</p>
+</dd>
+<dt>Возвращает:</dt><dd><p>Any: структуры данных Python (обычно list или dict).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_fetch_message.save_json">
+<span class="sig-prename descclassname"><span class="pre">tg_fetch_message.</span></span><span class="sig-name descname"><span class="pre">save_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_fetch_message.html#save_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_fetch_message.save_json" title="Link to this definition">¶</a></dt>
+<dd><p>Сохраняет переданные данные в файл формата JSON с поддержкой UTF-8.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>data (Any): Данные для JSON (обычно list или dict).
+filename (str): Путь к сохраняемому файлу.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-graph_builder">
+<dt class="sig sig-object py" id="graph_builder.build_graph">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graph_builder.</span></span><span class="sig-name descname"><span class="pre">build_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chat_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/graph_builder.html#build_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graph_builder.build_graph" title="Link to this definition">¶</a></dt>
+<dd><p>Строит граф взаимодействий для указанного чата.
+Аргументы функции:</p>
+<blockquote>
+<div><p>client: авторизованный TelegramClient
+chat_id: id группы
+limit: лимит, сколько последних сообщений обработать</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Возвращает:</dt><dd><dl class="simple">
+<dt>dict с ключами:</dt><dd><ul class="simple">
+<li><p>‘nodes’: список узлов (словари с id, full_name, username)</p></li>
+<li><p>‘edges’: список рёбер (sender, target, weight, replied, mentioned)</p></li>
+<li><p>‘metrics’: словарь с метриками графа</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graph_builder.compute_metrics">
+<span class="sig-prename descclassname"><span class="pre">graph_builder.</span></span><span class="sig-name descname"><span class="pre">compute_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/graph_builder.html#compute_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graph_builder.compute_metrics" title="Link to this definition">¶</a></dt>
+<dd><p>Вычисляет основные метрики графа, используя переданный ориентированный граф взаимодействий G.</p>
+<dl class="simple">
+<dt>Аргументы функции:</dt><dd><p>G: ориентированный граф networkx</p>
+</dd>
+<dt>Возвращает:</dt><dd><dl class="simple">
+<dt>dict с ключами:</dt><dd><ul class="simple">
+<li><p>‘nodes_count’: общее количество узлов (участников)</p></li>
+<li><p>‘edges_count’: общее количество направленных рёбер (связей)</p></li>
+<li><p>‘density’: плотность графа (от 0 до 1, где 1 = клика)</p></li>
+<li><p>‘giant_component_ratio’: доля участников, состоящих в основном ядре обсуждения</p></li>
+<li><p>‘communities’: список сообществ (алгоритм Лувена), каждое компонента — dict с ключами ‘community_id’, ‘size’ и ‘members’</p></li>
+<li><p>‘top_central_users’: список из 10 самых центральных участников по степени (degree centrality)</p></li>
+<li><p>‘top_pagerank’: список из 10 самых авторитетных участников по PageRank</p></li>
+<li><p>‘top_betweenness’: список из 10 главных связующих звеньев (betweenness centrality)</p></li>
+<li><p>‘articulation_points’: список id участников - точек сочленения</p></li>
+<li><p>‘bridges’: список мостов — пары людей, при удалении связи между которыми граф перестает быть связным</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-tg_get_statistic">
+<dt class="sig sig-object py" id="tg_get_statistic.count_messages">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_get_statistic.</span></span><span class="sig-name descname"><span class="pre">count_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">users</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_get_statistic.html#count_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_get_statistic.count_messages" title="Link to this definition">¶</a></dt>
+<dd><p>Подсчитывает количество сообщений от каждого пользователя и формирует
+рейтинг из 10 самых активных участников чата.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>messages (List[Dict[str, Any]]): Список словарей с данными сообщений.
+users (Dict[int, Dict[str, Any]]): Словарь зарегистрированных участников чата,</p>
+</dd>
+<dt>Возвращает:</dt><dd><p>List[Dict[str, Any]]: Список из 10 словарей, содержащих статистику
+активных пользователей (user_id, full_name, count, percent), отсортированный
+по убыванию активности.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_get_statistic.get_statistic">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_get_statistic.</span></span><span class="sig-name descname"><span class="pre">get_statistic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chat_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_get_statistic.html#get_statistic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_get_statistic.get_statistic" title="Link to this definition">¶</a></dt>
+<dd><p>Получает список пользователей и сообщения чата, после чего рассчитывает
+статистику топ-10 самых активных участников.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>client (Any): Авторизованный клиент Telegram (например, TelegramClient).
+chat_id (int): Идентификатор чата.
+limit (int, optional): Максимальное количество последних сообщений для анализа. По умолчанию 1000.</p>
+</dd>
+<dt>Возвращает:</dt><dd><p>Dict[str, Any]: Словарь со статистикой чата, содержащий ключ ‘top10_messages’
+со списком самых активных участников.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="frontend">
+<h1>Модули frontend<a class="headerlink" href="#frontend" title="Link to this heading">¶</a></h1>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Анализ чатов Telegram</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Александра Спиридонова, Илья Захаров.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/moduls.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
