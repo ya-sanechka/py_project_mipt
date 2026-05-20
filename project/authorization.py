@@ -1,12 +1,5 @@
 import streamlit as st
-import phonenumbers
-from phonenumbers import PhoneNumberFormat, NumberParseException
-from phonenumbers.phonenumberutil import is_valid_number
-from streamlit.web.server.oauth_authlib_routes import create_oauth_client
-
 from backend.tg_client import request_code, sign_in, create_client, send_password
-import re
-import asyncio
 
 def authorization(runner):
     """Функция предоставляет интерфейс для авторизации на сайт
