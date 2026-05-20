@@ -7,3 +7,5 @@ telethon
 sphinx
 sphinx-autodoc-typehints
 python-dotenv
+pymorphy3
+nltk

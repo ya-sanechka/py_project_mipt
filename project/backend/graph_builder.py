@@ -42,19 +42,53 @@ async def build_graph(client, chat_id, limit=1000):
                 if replier != sender:
                     k = (sender, replier)
                     if k not in edges:
-                        edges[k] = {'replied': 0, 'mentioned': 0}
+                        edges[k] = {'replied': 0, 'mentioned': 0, 'rapid_answer': 0}
                     edges[k]['replied'] += 1
             mentioned_users = msg.get('mentioned_users', [])
             for mentioned_id in mentioned_users:
                 if mentioned_id != sender:
                     k = (sender, mentioned_id)
                     if k not in edges:
-                        edges[k] = {'replied': 0, 'mentioned': 0}
+                        edges[k] = {'replied': 0, 'mentioned': 0, 'rapid_answer': 0}
                     edges[k]['mentioned'] += 1
+
+    from datetime import datetime, timedelta, timezone
+    def parse_date(msg):
+        try:
+            return datetime.fromisoformat(msg['date'])
+        except Exception:
+            return None
+
+    dated_messages = [msg for msg in messages if parse_date(msg) is not None]
+    dated_messages.sort(key=lambda m: parse_date(m))
+
+    for i in range(1, len(dated_messages)):
+        prev = dated_messages[i - 1]
+        curr = dated_messages[i]
+        prev_sender = prev.get('sender_id')
+        curr_sender = curr.get('sender_id')
+
+        if prev_sender is None or curr_sender is None:
+            continue
+        if prev_sender == curr_sender:
+            continue
+        if curr.get('reply_m_id') == prev.get('m_id'):
+            continue
+
+        prev_time = parse_date(prev)
+        curr_time = parse_date(curr)
+        if prev_time is None or curr_time is None:
+            continue
+        delta = (curr_time - prev_time).total_seconds()
+        if 0 < delta <= 60:
+            k = (curr_sender, prev_sender)
+            if k not in edges:
+                edges[k] = {'replied': 0, 'mentioned': 0, 'rapid_answer': 0}
+            edges[k]['rapid_answer'] += 1
 
     for (snd, trg), data in edges.items():
         G.add_edge(snd, trg, weight=data['replied'] + data['mentioned'],
-                   replied=data['replied'], mentioned=data['mentioned'])
+                   replied=data['replied'], mentioned=data['mentioned'], rapid_answer=data['rapid_answer'])
 
     metrics = compute_metrics(G)
 
@@ -72,9 +106,10 @@ async def build_graph(client, chat_id, limit=1000):
         edge_info = {
             'sender': u,
             'target': v,
-            'weight': data['replied'] + data['mentioned'],
+            'weight': 2 * data['replied'] + data['mentioned'] + data['rapid_answer'],
             'replied': data['replied'],
-            'mentioned': data['mentioned']
+            'mentioned': data['mentioned'],
+            'rapid_answer': data['rapid_answer']
         }
         edges_list.append(edge_info)
 

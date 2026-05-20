@@ -86,8 +86,10 @@ async def fetch_messages(client: Any, chat_id: int, limit: int = 1000) -> list[d
                 for el in m.reactions.results:
                     if hasattr(el.reaction, 'emoticon'):
                         emoji = el.reaction.emoticon
-                    else:
+                    elif hasattr(el.reaction, 'document_id'):
                         emoji = f"premium_emoji_{el.reaction.document_id}"
+                    else:
+                        emoji = 'star_premium_emoji'
                     r_dict = {
                         'type_icon': emoji,
                         'count': el.count
