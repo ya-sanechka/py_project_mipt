@@ -6,3 +6,4 @@ plotly
 telethon
 sphinx
 sphinx-autodoc-typehints
+python-dotenv
