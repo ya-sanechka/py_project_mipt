@@ -16,8 +16,8 @@ from telethon.errors import (
 )
 
 load_dotenv()
-API_ID = int(os.getenv("API_ID"))
-API_HASH = os.getenv("API_HASH")
+API_ID = int(os.getenv("API_ID") or 0)
+API_HASH = os.getenv("API_HASH") or ""
 
 proxy_tuple = ('mtproxy.neverspy.online', 443, 'dde8653d2faf392a302d829d79537abbe7')
 
