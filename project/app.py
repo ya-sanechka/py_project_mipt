@@ -8,49 +8,10 @@ from backend.graph_builder import build_graph
 from pyvis.network import Network
 import plotly.express as px
 import pandas as pd
-
+from telethon import TelegramClient
 from backend.tg_get_statistic import get_statistic
 
-if "session_name" not in st.session_state:
-    st.session_state.session_name = f"session_{uuid.uuid4().hex[:8]}"
-
-if "runner" not in st.session_state:
-    client = create_client(st.session_state.session_name)
-    st.session_state.runner = TelethonRunner(client)
-
-runner = st.session_state.runner
-client = runner.client
-
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if not st.session_state.logged_in:
-    authorization(runner)
-    st.stop()
-
-pages = {
-    "Граф общения": "graph_vizualization",
-    "Статистика общения": "chat_stats",
-    "Личный кабинет": "profile",
-}
-
-with st.sidebar:
-    st.title("Меню")
-    selected_page = st.radio(
-        "Выберите раздел",
-        list(pages.keys()),
-        key="current_page"
-    )
-
-    st.divider()
-    if st.button("Выйти"):
-        runner.stop()
-        for key in list(st.session_state.keys()):
-            if key not in ("current_page",):
-                del st.session_state[key]
-        st.rerun()
-
-def chat_stats():
+def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
     st.title("Статистика по чатам")
 
     if "group_options" not in st.session_state:
@@ -76,10 +37,10 @@ def chat_stats():
 
     st.caption('Не рекомендуется ставить больше 1500')
 
-def profile():
+def profile(runner : TelethonRunner, client : TelegramClient) -> None:
     pass
 
-def graph_vizualization():
+def graph_vizualization(runner : TelethonRunner, client : TelegramClient) -> None:
     """
     Отображает страницу «Граф отношений» в приложении Streamlit.
 
@@ -247,16 +208,56 @@ def graph_vizualization():
     else:
         st.info("Нажмите «Построить граф», чтобы отобразить визуализацию и статистику.")
 
+def main():
+    if "session_name" not in st.session_state:
+        st.session_state.session_name = f"session_{uuid.uuid4().hex[:8]}"
 
+    if "runner" not in st.session_state:
+        client = create_client(st.session_state.session_name)
+        st.session_state.runner = TelethonRunner(client)
 
+    runner = st.session_state.runner
+    client = runner.client
 
-page_id = pages[st.session_state.current_page]
-page_show = {
-    "chat_stats": chat_stats,
-    "profile": profile,
-    "graph_vizualization": graph_vizualization,
-}
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
 
-page_func = page_show.get(page_id)
-if page_func:
-    page_func()
+    if not st.session_state.logged_in:
+        authorization(runner)
+        st.stop()
+
+    pages = {
+        "Граф общения": "graph_vizualization",
+        "Статистика общения": "chat_stats",
+        "Личный кабинет": "profile",
+    }
+
+    with st.sidebar:
+        st.title("Меню")
+        selected_page = st.radio(
+            "Выберите раздел",
+            list(pages.keys()),
+            key="current_page"
+        )
+
+        st.divider()
+        if st.button("Выйти"):
+            runner.stop()
+            for key in list(st.session_state.keys()):
+                if key not in ("current_page",):
+                    del st.session_state[key]
+            st.rerun()
+
+    page_id = pages[st.session_state.current_page]
+    page_show = {
+        "chat_stats": chat_stats,
+        "profile": profile,
+        "graph_vizualization": graph_vizualization,
+    }
+
+    page_func = page_show.get(page_id)
+    if page_func:
+        page_func(runner, client)
+
+if __name__ == '__main__':
+    main()
