@@ -32,9 +32,119 @@
 
           <div class="body" role="main">
             
-  <section id="module-tg_fetch_message">
-<span id="backend"></span><h1>Модули backend<a class="headerlink" href="#module-tg_fetch_message" title="Link to this heading">¶</a></h1>
+  <section id="module-tg_client">
+<span id="backend"></span><h1>Модули backend<a class="headerlink" href="#module-tg_client" title="Link to this heading">¶</a></h1>
 <dl class="py function">
+<dt class="sig sig-object py" id="tg_client.create_client">
+<span class="sig-prename descclassname"><span class="pre">tg_client.</span></span><span class="sig-name descname"><span class="pre">create_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'new_session'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_client.html#create_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_client.create_client" title="Link to this definition">¶</a></dt>
+<dd><p>Создаёт новый экземпляр TelegramClient с указанным именем сессии.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TelegramClient</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_client.request_code">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_client.</span></span><span class="sig-name descname"><span class="pre">request_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phone</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_client.html#request_code"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_client.request_code" title="Link to this definition">¶</a></dt>
+<dd><p>Авторизация (1 шаг) - Отправляет код подтверждения на указанный номер телефона.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы функции:</dt><dd><p>client: TelegramClient
+phone: номер телефона (строка типа ‘+7…’).</p>
+</dd>
+<dt>Возвращает:</dt><dd><dl class="simple">
+<dt>Словарь с ключами:</dt><dd><ul class="simple">
+<li><p>status: ‘code_sent’ или ‘error’</p></li>
+<li><p>message: описание результата</p></li>
+<li><p>timeout: время ожидания до повторного запроса кода (если не придет)</p></li>
+<li><p>phone_code_hash: хэш, нужен для входа</p></li>
+<li><p>error_type: тип ошибки (если status=’error’)</p></li>
+<li><p>wait_seconds: сколько секунд нужно подождать при flood_wait ошибке</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_client.send_password">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_client.</span></span><span class="sig-name descname"><span class="pre">send_password</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_client.html#send_password"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_client.send_password" title="Link to this definition">¶</a></dt>
+<dd><p>Авторизация (3 шаг) (при необходимости пароля): отправляет пароль двухфакторной аутентификации.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы функции:</dt><dd><p>client: TelegramClient.
+password: пароль двухфакторной аутентификации.</p>
+</dd>
+<dt>Возвращает:</dt><dd><dl class="simple">
+<dt>Словарь с ключами:</dt><dd><ul class="simple">
+<li><p>status: ‘authorized’ / ‘error’</p></li>
+<li><p>user: пользователь, при успехе</p></li>
+<li><p>message: описание</p></li>
+<li><p>error_type: тип ошибки (при status=’error’)</p></li>
+<li><p>wait_seconds: при flood_wait</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_client.sign_in">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_client.</span></span><span class="sig-name descname"><span class="pre">sign_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phone_code_hash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_client.html#sign_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_client.sign_in" title="Link to this definition">¶</a></dt>
+<dd><p>Авторизация (2 шаг): выполняет вход по коду подтверждения.
+Если аккаунт защищён двухфакторной аутентификацией, возвращает статус ‘password_needed’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы функции:</dt><dd><p>client: TelegramClient.
+phone: номер телефона.
+code: код подтверждения из Telegram.
+phone_code_hash: хэш, полученный от request_code.</p>
+</dd>
+<dt>Возвращает:</dt><dd><dl class="simple">
+<dt>Словарь с ключами:</dt><dd><ul class="simple">
+<li><p>status: ‘authorized’ / ‘password_needed’ / ‘error’</p></li>
+<li><p>user: строка вида “Имя (&#64;username)” при успехе</p></li>
+<li><p>message: описание</p></li>
+<li><p>error_type: тип ошибки (при status=’error’)</p></li>
+<li><p>wait_seconds: сколько ждать секунд при flood_wait</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_client.tg_authorized">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_client.</span></span><span class="sig-name descname"><span class="pre">tg_authorized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_client.html#tg_authorized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_client.tg_authorized" title="Link to this definition">¶</a></dt>
+<dd><p>Проверяет, авторизован ли клиент, и возвращает объект текущего пользователя.
+Иначе вызывает исключение.</p>
+<dl class="simple">
+<dt>Аргументы функции:</dt><dd><p>client: TelegramClient.</p>
+</dd>
+<dt>Возвращает:</dt><dd><p>Объект User с информацией о текущем пользователе.</p>
+</dd>
+</dl>
+<p>Exception: если пользователь не авторизован.</p>
+</dd></dl>
+
+<dl class="py function" id="module-tg_fetch_message">
 <dt class="sig sig-object py" id="tg_fetch_message.ensure_data_dir">
 <span class="sig-prename descclassname"><span class="pre">tg_fetch_message.</span></span><span class="sig-name descname"><span class="pre">ensure_data_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_fetch_message.html#ensure_data_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_fetch_message.ensure_data_dir" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -235,8 +345,83 @@ limit (int, optional): Максимальное количество после�
 </dd></dl>
 
 </section>
-<section id="frontend">
-<h1>Модули frontend<a class="headerlink" href="#frontend" title="Link to this heading">¶</a></h1>
+<section id="module-app">
+<span id="frontend"></span><h1>Модули frontend<a class="headerlink" href="#module-app" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="app.chat_stats">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">chat_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#chat_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.chat_stats" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.graph_vizualization">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">graph_vizualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#graph_vizualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.graph_vizualization" title="Link to this definition">¶</a></dt>
+<dd><p>Отображает страницу «Граф отношений» в приложении Streamlit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Функция предоставляет интерфейс для:</dt><dd><ol class="arabic simple">
+<li><p>Выбора группы (чата) из списка диалогов пользователя.</p></li>
+<li><p>Установки лимита сообщений для анализа (от 500 до 5000).</p></li>
+<li><p>Построения ориентированного графа взаимодействий между участниками чата.</p></li>
+<li><p>Визуализации графа с помощью библиотеки pyvis (интерактивный граф).</p></li>
+<li><p>Вывода статистики графа: количество узлов/рёбер, плотность, доля в главном ядре,
+сообщества (алгоритм Лувена), топ центральности (Degree, PageRank, Betweenness),
+точки сочленения, мосты.</p></li>
+</ol>
+</dd>
+<dt>Использует <cite>st.session_state</cite> для кэширования:</dt><dd><ul class="simple">
+<li><p>group_options : dict – сопоставление названий групп с их ID.</p></li>
+<li><p>selected_group_name : str – текущая выбранная группа (для сохранения между переходами).</p></li>
+<li><p>message_limit : int – лимит сообщений (сохраняется в session_state).</p></li>
+<li><p>graph_data : dict или None – результат построения графа (nodes, edges, metrics, users).</p></li>
+</ul>
+</dd>
+<dt>Параметры (получаемые из внешнего окружения):</dt><dd><ul class="simple">
+<li><p>runner : TelethonRunner – объект для синхронного запуска асинхронных функций.</p></li>
+<li><p>client : TelegramClient – авторизованный клиент Telegram (доступен как runner.client).</p></li>
+</ul>
+</dd>
+<dt>Returns:</dt><dd><p>None. Функция непосредственно рендерит элементы интерфейса и визуализации в Streamlit.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.main">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.main" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.profile">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.profile" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-authorization">
+<dt class="sig sig-object py" id="authorization.authorization">
+<span class="sig-prename descclassname"><span class="pre">authorization.</span></span><span class="sig-name descname"><span class="pre">authorization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/authorization.html#authorization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#authorization.authorization" title="Link to this definition">¶</a></dt>
+<dd><p>Функция предоставляет интерфейс для авторизации на сайт</p>
+<p>Аргументов функция не принимает, просто запускается процесс авторизации при вызове</p>
+<p>Фактически функция дает полностью готовый авторизациооный интерфейс, зашадшему открывается страница
+с строкой ввода телефона, в случае неправильного ввода, пользователь получает ошибку (об ошибках подробнее
+в документации в request_code, sign_in и enter_password, ибо ошибки берутся оттуда</p>
+<p>Далее пользователь получает код и в случае установленной двухфакторной аутентификации пользователь получает
+пароль, все некорректные вводы обрабатываются соответсвующими ошибками</p>
+<p>После успещного захода на сайт пользователю открывается основаная страничка сайта</p>
+</dd></dl>
+
 </section>
 
 
@@ -268,6 +453,11 @@ limit (int, optional): Максимальное количество после�
 <p class="caption" role="heading"><span class="caption-text">Содержание</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Модули backend</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tg_client.create_client"><code class="docutils literal notranslate"><span class="pre">create_client()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tg_client.request_code"><code class="docutils literal notranslate"><span class="pre">request_code()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tg_client.send_password"><code class="docutils literal notranslate"><span class="pre">send_password()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tg_client.sign_in"><code class="docutils literal notranslate"><span class="pre">sign_in()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tg_client.tg_authorized"><code class="docutils literal notranslate"><span class="pre">tg_authorized()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tg_fetch_message.ensure_data_dir"><code class="docutils literal notranslate"><span class="pre">ensure_data_dir()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tg_fetch_message.fetch_messages"><code class="docutils literal notranslate"><span class="pre">fetch_messages()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tg_fetch_message.get_chat_users"><code class="docutils literal notranslate"><span class="pre">get_chat_users()</span></code></a></li>
@@ -280,7 +470,14 @@ limit (int, optional): Максимальное количество после�
 <li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.get_statistic"><code class="docutils literal notranslate"><span class="pre">get_statistic()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#frontend">Модули frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#module-app">Модули frontend</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#app.chat_stats"><code class="docutils literal notranslate"><span class="pre">chat_stats()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#app.graph_vizualization"><code class="docutils literal notranslate"><span class="pre">graph_vizualization()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#app.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#app.profile"><code class="docutils literal notranslate"><span class="pre">profile()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authorization.authorization"><code class="docutils literal notranslate"><span class="pre">authorization()</span></code></a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
