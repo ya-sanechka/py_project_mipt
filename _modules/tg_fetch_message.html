@@ -39,7 +39,7 @@
 <span class="n">users_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="get_groups">
-<a class="viewcode-back" href="../moduls.html#tg_fetch_message.get_groups">[docs]</a>
+<a class="viewcode-back" href="../modules.html#tg_fetch_message.get_groups">[docs]</a>
 <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_groups</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Получает список всех групп текущего пользователя,</span>
@@ -65,7 +65,7 @@
 
 
 <div class="viewcode-block" id="get_chat_users">
-<a class="viewcode-back" href="../moduls.html#tg_fetch_message.get_chat_users">[docs]</a>
+<a class="viewcode-back" href="../modules.html#tg_fetch_message.get_chat_users">[docs]</a>
 <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_chat_users</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Получает список участников указанного чата, формирует словарь с их данными,</span>
@@ -96,7 +96,7 @@
 
 
 <div class="viewcode-block" id="fetch_messages">
-<a class="viewcode-back" href="../moduls.html#tg_fetch_message.fetch_messages">[docs]</a>
+<a class="viewcode-back" href="../modules.html#tg_fetch_message.fetch_messages">[docs]</a>
 <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_messages</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Скачивает историю сообщений из чата, извлекает данные (упоминания, реакции),</span>
@@ -156,13 +156,13 @@
 <span class="n">DATA_DIR</span> <span class="o">=</span> <span class="s2">&quot;data&quot;</span>
 
 <div class="viewcode-block" id="ensure_data_dir">
-<a class="viewcode-back" href="../moduls.html#tg_fetch_message.ensure_data_dir">[docs]</a>
+<a class="viewcode-back" href="../modules.html#tg_fetch_message.ensure_data_dir">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ensure_data_dir</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">Path</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="save_json">
-<a class="viewcode-back" href="../moduls.html#tg_fetch_message.save_json">[docs]</a>
+<a class="viewcode-back" href="../modules.html#tg_fetch_message.save_json">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">save_json</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Сохраняет переданные данные в файл формата JSON с поддержкой UTF-8.</span>
@@ -179,7 +179,7 @@
 
 
 <div class="viewcode-block" id="load_json">
-<a class="viewcode-back" href="../moduls.html#tg_fetch_message.load_json">[docs]</a>
+<a class="viewcode-back" href="../modules.html#tg_fetch_message.load_json">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_json</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Загружает и десериализует данные из файла формата JSON.</span>
@@ -221,6 +221,11 @@
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Содержание</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Модули backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#frontend">Модули frontend</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
