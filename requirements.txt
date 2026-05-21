@@ -1,0 +1,13 @@
+networkx
+streamlit
+pyvis
+pandas
+plotly
+telethon
+sphinx
+sphinx-autodoc-typehints
+python-dotenv
+pymorphy3
+wordcloud
+matplotlib
+uuid
