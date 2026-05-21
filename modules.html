@@ -394,9 +394,175 @@ top_n: сколько фраз вернуть</p>
 </dl>
 </dd></dl>
 
+<dl class="py function" id="module-tg_profile_stat">
+<dt class="sig sig-object py" id="tg_profile_stat.get_my_profile">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_profile_stat.</span></span><span class="sig-name descname"><span class="pre">get_my_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_profile_stat.html#get_my_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_profile_stat.get_my_profile" title="Link to this definition">¶</a></dt>
+<dd><p>Собирает информацию о текущем авторизованном пользователе.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>client: авторизованный TelegramClient</p>
+</dd>
+<dt>Возвращает:</dt><dd><dl class="simple">
+<dt>dict с ключами:</dt><dd><ul class="simple">
+<li><p>‘id’, ‘first_name’, ‘last_name’, ‘username’, ‘phone’</p></li>
+<li><p>‘bio’: текст “о себе”</p></li>
+<li><p>‘avatar_path’: путь к файлу аватарки (выглядит как backend/avatars/avatar_id.png)</p></li>
+<li><p>‘status’: строка со статусом (в сети / не в сети) - возвращает UserStatusOnline или UserStatusOffline соответсвенно.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="frontend">
-<h1>Модули frontend<a class="headerlink" href="#frontend" title="Link to this heading">¶</a></h1>
+<section id="module-app">
+<span id="frontend"></span><h1>Модули frontend<a class="headerlink" href="#module-app" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="app.chat_stats">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">chat_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#chat_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.chat_stats" title="Link to this definition">¶</a></dt>
+<dd><p>Отображает страницу статистики чата в приложении Streamlit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Функция предоставляет интерфейс для:</dt><dd><ol class="arabic simple">
+<li><p>Выбора группы (чата) из списка диалогов пользователя.</p></li>
+<li><p>Установки лимита сообщений для анализа (от 500 до 5000).</p></li>
+<li><dl class="simple">
+<dt>Расчёта и отображения следующих метрик:</dt><dd><ul class="simple">
+<li><p>Топ‑10 самых активных участников (таблица с количеством сообщений и долей).</p></li>
+<li><p>Почасовая активность (столбчатая диаграмма).</p></li>
+<li><p>Облако самых частых слов.</p></li>
+<li><p>Облако самых частых фраз (из 2–5 слов).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+<dt>Возвращает:</dt><dd><p>None. Функция непосредственно рендерит элементы интерфейса в Streamlit.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.graph_vizualization">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">graph_vizualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#graph_vizualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.graph_vizualization" title="Link to this definition">¶</a></dt>
+<dd><p>Отображает страницу «Граф отношений» в приложении Streamlit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Функция предоставляет интерфейс для:</dt><dd><ol class="arabic simple">
+<li><p>Выбора группы (чата) из списка диалогов пользователя.</p></li>
+<li><p>Установки лимита сообщений для анализа (от 500 до 5000).</p></li>
+<li><p>Построения ориентированного графа взаимодействий между участниками чата.</p></li>
+<li><p>Визуализации графа с помощью библиотеки pyvis (интерактивный граф).</p></li>
+<li><p>Вывода статистики графа: количество узлов/рёбер, плотность, доля в главном ядре,
+сообщества (алгоритм Лувена), топ центральности (Degree, PageRank, Betweenness),
+точки сочленения, мосты.</p></li>
+</ol>
+</dd>
+<dt>Использует <cite>st.session_state</cite> для кэширования:</dt><dd><ul class="simple">
+<li><p>group_options : dict – сопоставление названий групп с их ID.</p></li>
+<li><p>selected_group_name : str – текущая выбранная группа (для сохранения между переходами).</p></li>
+<li><p>message_limit : int – лимит сообщений (сохраняется в session_state).</p></li>
+<li><p>graph_data : dict или None – результат построения графа (nodes, edges, metrics, users).</p></li>
+</ul>
+</dd>
+<dt>Параметры (получаемые из внешнего окружения):</dt><dd><ul class="simple">
+<li><p>runner : TelethonRunner – объект для синхронного запуска асинхронных функций.</p></li>
+<li><p>client : TelegramClient – авторизованный клиент Telegram (доступен как runner.client).</p></li>
+</ul>
+</dd>
+<dt>Returns:</dt><dd><p>None. Функция непосредственно рендерит элементы интерфейса и визуализации в Streamlit.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.main">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.main" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.profile">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app.html#profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app.profile" title="Link to this definition">¶</a></dt>
+<dd><p>Отображает страницу личного профиля текущего авторизованного пользователя.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Функция загружает и показывает:</dt><dd><ul class="simple">
+<li><p>Аватар пользователя (изображение).</p></li>
+<li><p>Имя и фамилию.</p></li>
+<li><p>Username (никнейм).</p></li>
+<li><p>Номер телефона.</p></li>
+<li><p>Биографию («о себе»).</p></li>
+<li><p>Текущий статус (онлайн/офлайн).</p></li>
+</ul>
+</dd>
+</dl>
+<p>Данные профиля кэшируются в <cite>st.session_state.profile_info</cite>, чтобы избежать
+повторных запросов к Telegram API при перерисовке страницы (например, при
+взаимодействии с другими виджетами).</p>
+<dl class="simple">
+<dt>Возвращает:</dt><dd><p>None. Функция непосредственно рендерит элементы интерфейса в Streamlit.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-authorization">
+<dt class="sig sig-object py" id="authorization.authorization">
+<span class="sig-prename descclassname"><span class="pre">authorization.</span></span><span class="sig-name descname"><span class="pre">authorization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/authorization.html#authorization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#authorization.authorization" title="Link to this definition">¶</a></dt>
+<dd><p>Функция предоставляет интерфейс для авторизации на сайт</p>
+<p>Аргументов функция не принимает, просто запускается процесс авторизации при вызове</p>
+<p>Фактически функция дает полностью готовый авторизациооный интерфейс, зашадшему открывается страница
+с строкой ввода телефона, в случае неправильного ввода, пользователь получает ошибку (об ошибках подробнее
+в документации в request_code, sign_in и enter_password, ибо ошибки берутся оттуда</p>
+<p>Далее пользователь получает код и в случае установленной двухфакторной аутентификации пользователь получает
+пароль, все некорректные вводы обрабатываются соответсвующими ошибками</p>
+<p>После успещного захода на сайт пользователю открывается основаная страничка сайта</p>
+</dd></dl>
+
+<dl class="py class" id="module-telethon_runner">
+<dt class="sig sig-object py" id="telethon_runner.TelethonRunner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">telethon_runner.</span></span><span class="sig-name descname"><span class="pre">TelethonRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telethon_runner.html#TelethonRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telethon_runner.TelethonRunner" title="Link to this definition">¶</a></dt>
+<dd><p>Обёртка для запуска асинхронного TelegramClient в синхронном окружении (например, Streamlit).
+Создаёт отдельный поток с собственным asyncio event loop, в котором выполняются все корутины.
+Позволяет вызывать асинхронные методы TelegramClient синхронно через метод run().</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="telethon_runner.TelethonRunner.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coro</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telethon_runner.html#TelethonRunner.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telethon_runner.TelethonRunner.run" title="Link to this definition">¶</a></dt>
+<dd><p>Синхронно выполняет корутину с повторными попытками при IncompleteReadError</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telethon_runner.TelethonRunner.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/telethon_runner.html#TelethonRunner.stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#telethon_runner.TelethonRunner.stop" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Корректно завершает работу TelethonRunner:</dt><dd><ul class="simple">
+<li><p>Отключает клиента от Telegram (client.disconnect()).</p></li>
+<li><p>Останавливает event loop фонового потока.</p></li>
+<li><p>Дожидается завершения фонового потока (join).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -446,9 +612,22 @@ top_n: сколько фраз вернуть</p>
 <li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.hourly_activity"><code class="docutils literal notranslate"><span class="pre">hourly_activity()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.top_phrases"><code class="docutils literal notranslate"><span class="pre">top_phrases()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.top_words"><code class="docutils literal notranslate"><span class="pre">top_words()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tg_profile_stat.get_my_profile"><code class="docutils literal notranslate"><span class="pre">get_my_profile()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#frontend">Модули frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#module-app">Модули frontend</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#app.chat_stats"><code class="docutils literal notranslate"><span class="pre">chat_stats()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#app.graph_vizualization"><code class="docutils literal notranslate"><span class="pre">graph_vizualization()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#app.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#app.profile"><code class="docutils literal notranslate"><span class="pre">profile()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authorization.authorization"><code class="docutils literal notranslate"><span class="pre">authorization()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#telethon_runner.TelethonRunner"><code class="docutils literal notranslate"><span class="pre">TelethonRunner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#telethon_runner.TelethonRunner.run"><code class="docutils literal notranslate"><span class="pre">TelethonRunner.run()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#telethon_runner.TelethonRunner.stop"><code class="docutils literal notranslate"><span class="pre">TelethonRunner.stop()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
