@@ -47,6 +47,6 @@ async def get_my_profile(client: TelegramClient) -> dict:
     else:
         profile['avatar_path'] = None
 
-    profile['status'] = me.status.to_dict().get('_', 'unknown')
+    profile['status'] = str(me.status.to_dict().get('_', 'unknown'))
 
     return profile

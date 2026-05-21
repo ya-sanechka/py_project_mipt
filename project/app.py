@@ -13,7 +13,24 @@ from backend.tg_get_statistic import get_statistic
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
+from backend.tg_profile_stat import get_my_profile
+
+
 def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
+    """
+    Отображает страницу статистики чата в приложении Streamlit.
+
+    Функция предоставляет интерфейс для:
+        1. Выбора группы (чата) из списка диалогов пользователя.
+        2. Установки лимита сообщений для анализа (от 500 до 5000).
+        3. Расчёта и отображения следующих метрик:
+            - Топ‑10 самых активных участников (таблица с количеством сообщений и долей).
+            - Почасовая активность (столбчатая диаграмма).
+            - Облако самых частых слов.
+            - Облако самых частых фраз (из 2–5 слов).
+    Возвращает:
+        None. Функция непосредственно рендерит элементы интерфейса в Streamlit.
+    """
     st.title("Статистика по чатам")
 
     if "group_options" not in st.session_state:
@@ -39,15 +56,16 @@ def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
 
     st.caption('Не рекомендуется ставить больше 1500')
     st.subheader("Статистика по чату")
-    statistics = runner.run(get_statistic(client, selected_group_id, limit))
+    if "statistics" not in st.session_state:
+        st.session_state.statistics = runner.run(get_statistic(client, selected_group_id, limit))
 
-    top10_messages = statistics["top10_messages"]
+    top10_messages = st.session_state.statistics["top10_messages"]
     table = pd.DataFrame([{"Участник" : row["full_name"],
                            "Количество Сообщений" : row["count"],
                            "Процент от общего количество" : row["percent"]} for row in top10_messages])
     st.dataframe(table, use_container_width=True)
 
-    hourly_activity = statistics['hourly_activity']
+    hourly_activity = st.session_state.statistics['hourly_activity']
     df = pd.DataFrame([{"Часы" : hour, "Количество сообщений" :  hourly_activity.get(hour, 0)} for hour in range(24)])
     st.bar_chart(df,
                  x="Часы",
@@ -56,7 +74,7 @@ def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
                  horizontal=False)
 
     st.subheader("Облако самых частых слов")
-    top_words_data = statistics['top_words']
+    top_words_data = st.session_state.statistics['top_words']
     freq = {item['word']: item['count'] for item in top_words_data}
     wc = WordCloud(width=800, height=400, background_color='white', colormap='viridis').generate_from_frequencies(
         freq)
@@ -66,7 +84,7 @@ def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
     st.pyplot(fig)
 
     st.subheader("Облако самых частых фраз")
-    top_phrases = statistics['top_phrases']
+    top_phrases = st.session_state.statistics['top_phrases']
     freq = {item['phrase']: item['count'] for item in top_phrases}
     wc = WordCloud(width=800, height=400, background_color='white', colormap='viridis').generate_from_frequencies(
         freq)
@@ -78,7 +96,52 @@ def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
 
 
 def profile(runner : TelethonRunner, client : TelegramClient) -> None:
-    pass
+    """
+    Отображает страницу личного профиля текущего авторизованного пользователя.
+
+    Функция загружает и показывает:
+        - Аватар пользователя (изображение).
+        - Имя и фамилию.
+        - Username (никнейм).
+        - Номер телефона.
+        - Биографию («о себе»).
+        - Текущий статус (онлайн/офлайн).
+
+    Данные профиля кэшируются в `st.session_state.profile_info`, чтобы избежать
+    повторных запросов к Telegram API при перерисовке страницы (например, при
+    взаимодействии с другими виджетами).
+
+    Возвращает:
+        None. Функция непосредственно рендерит элементы интерфейса в Streamlit.
+    """
+    st.title("Личный рофиль")
+    if "profile_info" not in st.session_state:
+        st.session_state.profile_info = runner.run(get_my_profile(client))
+    first_name = st.session_state.profile_info['first_name']
+    last_name = st.session_state.profile_info["last_name"]
+    username = st.session_state.profile_info["username"]
+    user_phone = st.session_state.profile_info["phone"]
+    bio = st.session_state.profile_info["bio"]
+    avatar_path = st.session_state.profile_info["avatar_path"]
+    status = st.session_state.profile_info["status"]
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.image(avatar_path)
+
+    with col2:
+        st.subheader(f"{first_name} {last_name}")
+        st.caption(f"username: {username}")
+        st.caption(f"phone: {user_phone}")
+        if bio:
+            st.text(f"Личная информация: {bio}")
+        if (status == "UserStatusOnline"):
+            st.text(f"status: online")
+        else:
+            st.text(f"status: offline")
+
+
 
 def graph_vizualization(runner : TelethonRunner, client : TelegramClient) -> None:
     """
@@ -154,7 +217,7 @@ def graph_vizualization(runner : TelethonRunner, client : TelegramClient) -> Non
         for node in nodes:
             net.add_node(node["id"], node["full_name"], node["username"])
         for edge in edges:
-            title = f"Ответов: {edge['replied']}, Упоминаний: {edge['mentioned']}"
+            title = f"Ответов: {edge['replied']}, Упоминаний: {edge['mentioned']}, Быстрых ответов: {edge['rapid_answer']}"
             net.add_edge(edge["sender"], edge["target"], value=edge["weight"], title=title)
 
         net.set_options(
