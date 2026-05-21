@@ -103,12 +103,14 @@ def hourly_activity(messages: List[Dict[str, Any]]) -> Dict[int, int]:
     return hourly
 
 
-
 def top_words(messages: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str, Any]]:
     with open('backend/stopwords.txt', 'r', encoding='utf-8') as f:
         stop_words = set(line.strip() for line in f if line.strip())
     morph = pymorphy3.MorphAnalyzer()
-    all_words = []
+
+    cnt = {}
+    original = {}
+
     for msg in messages:
         text = msg.get('text')
         if not text:
@@ -125,18 +127,16 @@ def top_words(messages: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str,
                     lemma = word
                 if lemma in stop_words:
                     continue
-                all_words.append(lemma)
-
-    cnt = {}
-    for w in all_words:
-        cnt[w] = cnt.get(w, 0) + 1
+                cnt[lemma] = cnt.get(lemma, 0) + 1
+                if lemma not in original:
+                    original[lemma] = word
 
     sorted_words = sorted(cnt.items(), key=lambda p: p[1], reverse=True)
 
     top = []
-    for word, count in sorted_words[:top_n]:
+    for lemma, count in sorted_words[:top_n]:
         if count > 4:
-            top.append({'word': word, 'count': count})
+            top.append({'word': original.get(lemma, lemma), 'count': count})
 
     return top
 

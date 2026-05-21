@@ -1,12 +1,6 @@
 import streamlit as st
-import phonenumbers
-from phonenumbers import PhoneNumberFormat, NumberParseException
-from phonenumbers.phonenumberutil import is_valid_number
-from streamlit.web.server.oauth_authlib_routes import create_oauth_client
-
 from backend.tg_client import request_code, sign_in, create_client, send_password
-import re
-import asyncio
+
 
 def authorization(runner):
     """Функция предоставляет интерфейс для авторизации на сайт
@@ -55,6 +49,7 @@ def authorization(runner):
     elif st.session_state.step == "code":
         st.title("Получение кода")
         telegram_code = st.text_input('Введите отправленный вам телеграмм-код')
+        st.caption(f"Код отправлен на номер {st.session_state.phone}")
         st.session_state.code = telegram_code
 
         if st.button('Продолжить', key='continue_btn'):
@@ -83,6 +78,10 @@ def authorization(runner):
                     st.session_state.logged_in = True
                     st.session_state.step = "phone"
                     st.rerun()
+
+        if st.button('Назад'):
+            st.session_state.step = "phone"
+            st.rerun()
 
     elif st.session_state.step == "password":
         st.title("Двухфакторная аутентификация")
