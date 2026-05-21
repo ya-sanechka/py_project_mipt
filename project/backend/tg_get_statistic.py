@@ -103,6 +103,7 @@ def hourly_activity(messages: List[Dict[str, Any]]) -> Dict[int, int]:
     return hourly
 
 
+
 def top_words(messages: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str, Any]]:
     with open('backend/stopwords.txt', 'r', encoding='utf-8') as f:
         stop_words = set(line.strip() for line in f if line.strip())
