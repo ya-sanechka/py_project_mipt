@@ -127,8 +127,10 @@
                 <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">reactions</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
                     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> <span class="s1">&#39;emoticon&#39;</span><span class="p">):</span>
                         <span class="n">emoji</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">reaction</span><span class="o">.</span><span class="n">emoticon</span>
-                    <span class="k">else</span><span class="p">:</span>
+                    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">reaction</span><span class="p">,</span> <span class="s1">&#39;document_id&#39;</span><span class="p">):</span>
                         <span class="n">emoji</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;premium_emoji_</span><span class="si">{</span><span class="n">el</span><span class="o">.</span><span class="n">reaction</span><span class="o">.</span><span class="n">document_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">emoji</span> <span class="o">=</span> <span class="s1">&#39;star_premium_emoji&#39;</span>
                     <span class="n">r_dict</span> <span class="o">=</span> <span class="p">{</span>
                         <span class="s1">&#39;type_icon&#39;</span><span class="p">:</span> <span class="n">emoji</span><span class="p">,</span>
                         <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="n">el</span><span class="o">.</span><span class="n">count</span>

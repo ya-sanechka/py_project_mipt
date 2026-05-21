@@ -31,9 +31,12 @@
           <div class="body" role="main">
             
   <h1>Source code for tg_get_statistic</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">backend.tg_fetch_message</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_chat_users</span><span class="p">,</span> <span class="n">fetch_messages</span>
-
+<span class="kn">from</span><span class="w"> </span><span class="nn">nltk.corpus</span><span class="w"> </span><span class="kn">import</span> <span class="n">stopwords</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pymorphy3</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
 
 <div class="viewcode-block" id="get_statistic">
 <a class="viewcode-back" href="../modules.html#tg_get_statistic.get_statistic">[docs]</a>
@@ -49,19 +52,25 @@
 
 <span class="sd">    Возвращает:</span>
 <span class="sd">        Dict[str, Any]: Словарь со статистикой чата, содержащий ключ &#39;top10_messages&#39;</span>
-<span class="sd">        со списком самых активных участников.</span>
+<span class="sd">        со списком самых активных участников, ключ &#39;hourly_activity&#39; со статистикой кол-ва</span>
+<span class="sd">        сообщений по часам, ключ &#39;weekly_activity&#39; со статистикой по дням недели.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">users_dict</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_chat_users</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">)</span>
     <span class="n">messages</span> <span class="o">=</span> <span class="k">await</span> <span class="n">fetch_messages</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
-    <span class="n">statistics</span><span class="o">=</span> <span class="p">{}</span>
-    <span class="n">statistics</span><span class="p">[</span><span class="s1">&#39;top10_messages&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">count_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">users_dict</span><span class="p">)</span>
+    <span class="n">statistics</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">statistics</span><span class="p">[</span><span class="s1">&#39;top10_messages&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">count_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">users_dict</span><span class="p">)</span>
+    <span class="n">statistics</span><span class="p">[</span><span class="s1">&#39;hourly_activity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hourly_activity</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+    <span class="n">statistics</span><span class="p">[</span><span class="s1">&#39;top_words&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">top_words</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+    <span class="n">statistics</span><span class="p">[</span><span class="s1">&#39;top_phrases&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">calculate_top_phrases</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">min_count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_words</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">top_n</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="c1">#statistics[&#39;top_phrases&#39;] = calculate_top_phrases(messages, top_n=20)</span>
+    <span class="c1">#statistics[&#39;top_trigrams&#39;] = calculate_top_trigrams(messages, top_n=20)</span>
     <span class="k">return</span> <span class="n">statistics</span></div>
 
 
 
 <div class="viewcode-block" id="count_messages">
 <a class="viewcode-back" href="../modules.html#tg_get_statistic.count_messages">[docs]</a>
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">count_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">users</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">count_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">users</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Подсчитывает количество сообщений от каждого пользователя и формирует</span>
 <span class="sd">    рейтинг из 10 самых активных участников чата.</span>
@@ -108,6 +117,146 @@
             <span class="p">})</span>
 
     <span class="k">return</span> <span class="n">top10_list</span></div>
+
+
+
+<div class="viewcode-block" id="hourly_activity">
+<a class="viewcode-back" href="../modules.html#tg_get_statistic.hourly_activity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hourly_activity</span><span class="p">(</span><span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Подсчитывает количество сообщений по часам суток.</span>
+
+<span class="sd">    Аргументы:</span>
+<span class="sd">        messages (List[Dict[str, Any]]): Список словарей с данными сообщений.</span>
+
+<span class="sd">    Возвращает:</span>
+<span class="sd">        Dict[int, int]: Словарь, где ключ — час, значение — количество сообщений.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hourly</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">))</span>
+            <span class="n">hour</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">hour</span>
+            <span class="n">hourly</span><span class="p">[</span><span class="n">hour</span><span class="p">]</span> <span class="o">=</span> <span class="n">hourly</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hour</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+    <span class="k">return</span> <span class="n">hourly</span></div>
+
+
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pymorphy3</span>
+<div class="viewcode-block" id="top_words">
+<a class="viewcode-back" href="../modules.html#tg_get_statistic.top_words">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">top_words</span><span class="p">(</span><span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;backend/stopwords.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">stop_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="n">morph</span> <span class="o">=</span> <span class="n">pymorphy3</span><span class="o">.</span><span class="n">MorphAnalyzer</span><span class="p">()</span>
+    <span class="n">all_words</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">maketrans</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">word</span> <span class="o">!=</span> <span class="s1">&#39;фпми&#39;</span> <span class="ow">and</span> <span class="n">word</span> <span class="o">!=</span> <span class="s1">&#39;мфти&#39;</span><span class="p">:</span>
+                        <span class="n">lemma</span> <span class="o">=</span> <span class="n">morph</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">word</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">normal_form</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">lemma</span> <span class="o">=</span> <span class="n">word</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">lemma</span> <span class="o">=</span> <span class="n">word</span>
+                <span class="k">if</span> <span class="n">lemma</span> <span class="ow">in</span> <span class="n">stop_words</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">all_words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lemma</span><span class="p">)</span>
+
+    <span class="n">freq</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">all_words</span><span class="p">:</span>
+        <span class="n">freq</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">freq</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">sorted_words</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">freq</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">top</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">sorted_words</span><span class="p">[:</span><span class="n">top_n</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">top</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;word&#39;</span><span class="p">:</span> <span class="n">word</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="n">count</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">top</span></div>
+
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pymorphy3</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
+
+<div class="viewcode-block" id="calculate_top_phrases">
+<a class="viewcode-back" href="../modules.html#tg_get_statistic.calculate_top_phrases">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_top_phrases</span><span class="p">(</span><span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">min_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">max_words</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Извлекает самые частые фразы (из n-граммы 2..max_words слов).</span>
+<span class="sd">    Фраза отбрасывается только если ВСЕ её леммы в stopwords.txt.</span>
+<span class="sd">    Короткие фразы, полностью входящие в более длинные с близкой частотой, удаляются.</span>
+
+<span class="sd">    Аргументы:</span>
+<span class="sd">        messages: список сообщений</span>
+<span class="sd">        min_count: минимальное количество вхождений фразы</span>
+<span class="sd">        max_words: максимальное число слов во фразе (2..5)</span>
+<span class="sd">        top_n: сколько фраз вернуть</span>
+<span class="sd">    Возвращает:</span>
+<span class="sd">        список словарей [{&#39;phrase&#39;: &#39;...&#39;, &#39;count&#39;: N}, ...]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;backend/stopwords.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">stop_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+    <span class="n">morph</span> <span class="o">=</span> <span class="n">pymorphy3</span><span class="o">.</span><span class="n">MorphAnalyzer</span><span class="p">()</span>
+    <span class="n">all_words</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_original</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">maketrans</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">lemma</span> <span class="o">=</span> <span class="n">morph</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">word</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">normal_form</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">lemma</span> <span class="o">=</span> <span class="n">word</span>
+            <span class="n">all_words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lemma</span><span class="p">)</span>
+            <span class="n">all_original</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+
+    <span class="n">cnt</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_words</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_words</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">lemmas</span> <span class="o">=</span> <span class="n">all_words</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">([</span><span class="n">lemma</span> <span class="k">for</span> <span class="n">lemma</span> <span class="ow">in</span> <span class="n">lemmas</span> <span class="k">if</span> <span class="n">lemma</span> <span class="ow">in</span> <span class="n">stop_words</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">lemmas</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">phrase</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_original</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">n</span><span class="p">])</span>
+            <span class="n">cnt</span><span class="p">[</span><span class="n">phrase</span><span class="p">]</span> <span class="o">=</span> <span class="n">cnt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phrase</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">cnt</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cnt</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">min_count</span><span class="p">}</span>
+
+    <span class="n">sorted_phrases</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">cnt</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()),</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">final</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">phrase</span><span class="p">,</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="n">sorted_phrases</span><span class="p">:</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="n">phrase</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">k_phrase</span><span class="p">,</span> <span class="n">k_cnt</span> <span class="ow">in</span> <span class="n">final</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">k_words</span> <span class="o">=</span> <span class="n">k_phrase</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">k_words</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">k_words</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">k_words</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)]</span> <span class="o">==</span> <span class="n">words</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">k_cnt</span> <span class="o">-</span> <span class="n">cnt</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">k_cnt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0.2</span><span class="p">:</span>
+                            <span class="n">f</span> <span class="o">=</span> <span class="kc">False</span>
+                            <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="k">if</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">final</span><span class="p">[</span><span class="n">phrase</span><span class="p">]</span> <span class="o">=</span> <span class="n">cnt</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">final</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">top_n</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[{</span><span class="s1">&#39;phrase&#39;</span><span class="p">:</span> <span class="n">phrase</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="n">cnt</span><span class="p">}</span> <span class="k">for</span> <span class="n">phrase</span><span class="p">,</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span></div>
 
 </pre></div>
 

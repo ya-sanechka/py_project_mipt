@@ -303,8 +303,30 @@ limit: лимит, сколько последних сообщений обра
 </dd></dl>
 
 <dl class="py function" id="module-tg_get_statistic">
+<dt class="sig sig-object py" id="tg_get_statistic.calculate_top_phrases">
+<span class="sig-prename descclassname"><span class="pre">tg_get_statistic.</span></span><span class="sig-name descname"><span class="pre">calculate_top_phrases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_get_statistic.html#calculate_top_phrases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_get_statistic.calculate_top_phrases" title="Link to this definition">¶</a></dt>
+<dd><p>Извлекает самые частые фразы (из n-граммы 2..max_words слов).
+Фраза отбрасывается только если ВСЕ её леммы в stopwords.txt.
+Короткие фразы, полностью входящие в более длинные с близкой частотой, удаляются.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>messages: список сообщений
+min_count: минимальное количество вхождений фразы
+max_words: максимальное число слов во фразе (2..5)
+top_n: сколько фраз вернуть</p>
+</dd>
+<dt>Возвращает:</dt><dd><p>список словарей [{‘phrase’: ‘…’, ‘count’: N}, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="tg_get_statistic.count_messages">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tg_get_statistic.</span></span><span class="sig-name descname"><span class="pre">count_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">users</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_get_statistic.html#count_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_get_statistic.count_messages" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">tg_get_statistic.</span></span><span class="sig-name descname"><span class="pre">count_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">users</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_get_statistic.html#count_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_get_statistic.count_messages" title="Link to this definition">¶</a></dt>
 <dd><p>Подсчитывает количество сообщений от каждого пользователя и формирует
 рейтинг из 10 самых активных участников чата.</p>
 <dl class="field-list simple">
@@ -339,7 +361,35 @@ chat_id (int): Идентификатор чата.
 limit (int, optional): Максимальное количество последних сообщений для анализа. По умолчанию 1000.</p>
 </dd>
 <dt>Возвращает:</dt><dd><p>Dict[str, Any]: Словарь со статистикой чата, содержащий ключ ‘top10_messages’
-со списком самых активных участников.</p>
+со списком самых активных участников, ключ ‘hourly_activity’ со статистикой кол-ва
+сообщений по часам, ключ ‘weekly_activity’ со статистикой по дням недели.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_get_statistic.hourly_activity">
+<span class="sig-prename descclassname"><span class="pre">tg_get_statistic.</span></span><span class="sig-name descname"><span class="pre">hourly_activity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_get_statistic.html#hourly_activity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_get_statistic.hourly_activity" title="Link to this definition">¶</a></dt>
+<dd><p>Подсчитывает количество сообщений по часам суток.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Аргументы:</dt><dd><p>messages (List[Dict[str, Any]]): Список словарей с данными сообщений.</p>
+</dd>
+<dt>Возвращает:</dt><dd><p>Dict[int, int]: Словарь, где ключ — час, значение — количество сообщений.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tg_get_statistic.top_words">
+<span class="sig-prename descclassname"><span class="pre">tg_get_statistic.</span></span><span class="sig-name descname"><span class="pre">top_words</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tg_get_statistic.html#top_words"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tg_get_statistic.top_words" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -466,8 +516,11 @@ limit (int, optional): Максимальное количество после�
 <li class="toctree-l2"><a class="reference internal" href="#tg_fetch_message.save_json"><code class="docutils literal notranslate"><span class="pre">save_json()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#graph_builder.build_graph"><code class="docutils literal notranslate"><span class="pre">build_graph()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#graph_builder.compute_metrics"><code class="docutils literal notranslate"><span class="pre">compute_metrics()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.calculate_top_phrases"><code class="docutils literal notranslate"><span class="pre">calculate_top_phrases()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.count_messages"><code class="docutils literal notranslate"><span class="pre">count_messages()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.get_statistic"><code class="docutils literal notranslate"><span class="pre">get_statistic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.hourly_activity"><code class="docutils literal notranslate"><span class="pre">hourly_activity()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tg_get_statistic.top_words"><code class="docutils literal notranslate"><span class="pre">top_words()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#module-app">Модули frontend</a><ul>
