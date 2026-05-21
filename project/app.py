@@ -13,6 +13,9 @@ from backend.tg_get_statistic import get_statistic
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
+from backend.tg_profile_stat import get_my_profile
+
+
 def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
     st.title("Статистика по чатам")
 
@@ -78,7 +81,33 @@ def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
 
 
 def profile(runner : TelethonRunner, client : TelegramClient) -> None:
-    pass
+    st.title("Личный рофиль")
+    profile_info = runner.run(get_my_profile(client))
+    first_name = profile_info['first_name']
+    last_name = profile_info["last_name"]
+    username = profile_info["username"]
+    user_phone = profile_info["phone"]
+    bio = profile_info["bio"]
+    avatar_path = profile_info["avatar_path"]
+    status = profile_info["status"]
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.image(avatar_path)
+
+    with col2:
+        st.subheader(f"{first_name} {last_name}")
+        st.caption(f"username: {username}")
+        st.caption(f"phone: {user_phone}")
+        if bio:
+            st.text(f"Личная информация: {bio}")
+        if (status == "UserStatusOnline"):
+            st.text(f"status: online")
+        else:
+            st.text(f"status: offline")
+
+
 
 def graph_vizualization(runner : TelethonRunner, client : TelegramClient) -> None:
     """
@@ -154,7 +183,7 @@ def graph_vizualization(runner : TelethonRunner, client : TelegramClient) -> Non
         for node in nodes:
             net.add_node(node["id"], node["full_name"], node["username"])
         for edge in edges:
-            title = f"Ответов: {edge['replied']}, Упоминаний: {edge['mentioned']}"
+            title = f"Ответов: {edge['replied']}, Упоминаний: {edge['mentioned']}, Быстрых ответов: {edge['rapid_answer']}"
             net.add_edge(edge["sender"], edge["target"], value=edge["weight"], title=title)
 
         net.set_options(
