@@ -11,3 +11,4 @@ pymorphy3
 wordcloud
 matplotlib
 uuid
+scipy
