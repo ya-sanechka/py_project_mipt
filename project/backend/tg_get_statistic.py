@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from backend.tg_fetch_message import get_chat_users, fetch_messages
-from nltk.corpus import stopwords
 import pymorphy3
 import string
+import os
+from telethon import TelegramClient
+from telethon.tl.functions.users import GetFullUserRequest
 
-async def get_statistic(client: Any, chat_id: int, limit: int = 1000) -> Dict[str, Any]:
+async def get_statistic(client: TelegramClient, chat_id: int, limit: int = 1000) -> Dict[str, Any]:
     """
     Получает список пользователей и сообщения чата, после чего рассчитывает
     статистику топ-10 самых активных участников.
@@ -26,9 +28,7 @@ async def get_statistic(client: Any, chat_id: int, limit: int = 1000) -> Dict[st
     statistics['top10_messages'] = count_messages(messages, users_dict)
     statistics['hourly_activity'] = hourly_activity(messages)
     statistics['top_words'] = top_words(messages)
-    statistics['top_phrases'] = calculate_top_phrases(messages, min_count=3, max_words=5, top_n=30)
-    #statistics['top_phrases'] = calculate_top_phrases(messages, top_n=20)
-    #statistics['top_trigrams'] = calculate_top_trigrams(messages, top_n=20)
+    statistics['top_phrases'] = top_phrases(messages)
     return statistics
 
 
@@ -103,7 +103,6 @@ def hourly_activity(messages: List[Dict[str, Any]]) -> Dict[int, int]:
     return hourly
 
 
-import pymorphy3
 def top_words(messages: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str, Any]]:
     with open('backend/stopwords.txt', 'r', encoding='utf-8') as f:
         stop_words = set(line.strip() for line in f if line.strip())
@@ -127,11 +126,11 @@ def top_words(messages: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str,
                     continue
                 all_words.append(lemma)
 
-    freq = {}
+    cnt = {}
     for w in all_words:
-        freq[w] = freq.get(w, 0) + 1
+        cnt[w] = cnt.get(w, 0) + 1
 
-    sorted_words = sorted(freq.items(), key=lambda p: p[1], reverse=True)
+    sorted_words = sorted(cnt.items(), key=lambda p: p[1], reverse=True)
 
     top = []
     for word, count in sorted_words[:top_n]:
@@ -140,10 +139,8 @@ def top_words(messages: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str,
 
     return top
 
-import pymorphy3
-import string
 
-def calculate_top_phrases(messages: List[Dict[str, Any]], min_count: int = 3, max_words: int = 5, top_n: int = 20) -> List[Dict[str, Any]]:
+def top_phrases(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Извлекает самые частые фразы (из n-граммы 2..max_words слов).
     Фраза отбрасывается только если ВСЕ её леммы в stopwords.txt.
@@ -157,6 +154,9 @@ def calculate_top_phrases(messages: List[Dict[str, Any]], min_count: int = 3, ma
     Возвращает:
         список словарей [{'phrase': '...', 'count': N}, ...]
     """
+    min_count = 3
+    max_words = 5
+    top_n = 20
     with open('backend/stopwords.txt', 'r', encoding='utf-8') as f:
         stop_words = set(line.strip() for line in f if line.strip())
 
@@ -166,33 +166,37 @@ def calculate_top_phrases(messages: List[Dict[str, Any]], min_count: int = 3, ma
 
     for msg in messages:
         text = msg.get('text')
-        if not text:
-            continue
-        text = text.lower().translate(str.maketrans('', '', string.punctuation))
-        for word in text.split():
-            if len(word) < 2:
-                continue
-            try:
-                lemma = morph.parse(word)[0].normal_form
-            except Exception:
-                lemma = word
-            all_words.append(lemma)
-            all_original.append(word)
+        if text:
+            text = text.lower().translate(str.maketrans('', '', string.punctuation))
+            for word in text.split():
+                if len(word) >= 2:
+                    try:
+                        if word != 'фпми' and word != 'мфти':
+                            lemma = morph.parse(word)[0].normal_form
+                        else:
+                            lemma = word
+                    except Exception:
+                        lemma = word
+                    all_words.append(lemma)
+                    all_original.append(word)
 
     cnt = {}
     for n in range(2, max_words + 1):
         for i in range(len(all_words) - n + 1):
-            lemmas = all_words[i:i+n]
-            if len([lemma for lemma in lemmas if lemma in stop_words]) == len(lemmas):
+            lemmas = all_words[i:i + n]
+            if len([lemma for lemma in lemmas if lemma in stop_words]) == len(lemmas):  # если фул только из стоп-слов
                 continue
-            phrase = " ".join(all_original[i:i+n])
+            phrase = " ".join(all_original[i:i + n])
             cnt[phrase] = cnt.get(phrase, 0) + 1
 
-    cnt = {k: v for k, v in cnt.items() if v >= min_count}
+    cnt_n = {}
+    for k, v in cnt.items():
+        if v >= min_count:
+            cnt_n[k] = v
 
-    sorted_phrases = sorted(cnt.items(), key=lambda x: (-len(x[0].split()), -x[1]))
+    sorted_phrases = sorted(cnt_n.items(), key=lambda x: (-len(x[0].split()), -x[1]))
     final = {}
-    for phrase, cnt in sorted_phrases:
+    for phrase, cnt_n in sorted_phrases:
         words = phrase.split()
         f = True
         for k_phrase, k_cnt in final.items():
@@ -200,13 +204,16 @@ def calculate_top_phrases(messages: List[Dict[str, Any]], min_count: int = 3, ma
             if len(k_words) > len(words):
                 for j in range(len(k_words) - len(words) + 1):
                     if k_words[j:j+len(words)] == words:
-                        if abs(k_cnt - cnt) / max(k_cnt, 1) <= 0.2:
+                        if abs(k_cnt - cnt_n) / max(k_cnt, 1) <= 0.2:
                             f = False
                             break
                 if not f:
                     break
         if f:
-            final[phrase] = cnt
+            final[phrase] = cnt_n
 
     result = sorted(final.items(), key=lambda x: x[1], reverse=True)[:top_n]
-    return [{'phrase': phrase, 'count': cnt} for phrase, cnt in result]
+    res = []
+    for phrase, cnt in result:
+        res.append({'phrase': phrase, 'count': cnt})
+    return res

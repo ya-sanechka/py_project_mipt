@@ -1,6 +1,8 @@
 import asyncio
-import threading
 from telethon import TelegramClient
+from asyncio.exceptions import IncompleteReadError
+import threading
+import time
 
 class TelethonRunner:
     """
@@ -31,14 +33,19 @@ class TelethonRunner:
         asyncio.set_event_loop(self.loop)
         self.loop.run_forever()
 
-    def run(self, coro):
-        """
-        Синхронно выполняет корутину в фоновом event loop и возвращает её результат.
-        Аргументы: coro (coroutine): корутина (асинхронная функция), которую необходимо выполнить.
-        Возвращает:  Результат выполнения корутины (тип зависит от переданной корутины).
-        """
-        future = asyncio.run_coroutine_threadsafe(coro, self.loop)
-        return future.result()
+    def run(self, coro, retries=3, delay=1):
+        """Синхронно выполняет корутину с повторными попытками при IncompleteReadError"""
+        for attempt in range(retries):
+            try:
+                future = asyncio.run_coroutine_threadsafe(coro, self.loop)
+                return future.result()
+            except IncompleteReadError as e:
+                if attempt == retries - 1:
+                    raise
+                time.sleep(delay * (attempt + 1))  # увеличиваем задержку
+                # Переподключаем клиента
+                self.run(self.client.disconnect())
+                self.run(self.client.connect())
 
     def stop(self):
         """

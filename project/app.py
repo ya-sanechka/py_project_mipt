@@ -10,6 +10,8 @@ import plotly.express as px
 import pandas as pd
 from telethon import TelegramClient
 from backend.tg_get_statistic import get_statistic
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
     st.title("Статистика по чатам")
@@ -36,6 +38,44 @@ def chat_stats(runner : TelethonRunner, client : TelegramClient) -> None:
                             key="message_limit")
 
     st.caption('Не рекомендуется ставить больше 1500')
+    st.subheader("Статистика по чату")
+    statistics = runner.run(get_statistic(client, selected_group_id, limit))
+
+    top10_messages = statistics["top10_messages"]
+    table = pd.DataFrame([{"Участник" : row["full_name"],
+                           "Количество Сообщений" : row["count"],
+                           "Процент от общего количество" : row["percent"]} for row in top10_messages])
+    st.dataframe(table, use_container_width=True)
+
+    hourly_activity = statistics['hourly_activity']
+    df = pd.DataFrame([{"Часы" : hour, "Количество сообщений" :  hourly_activity.get(hour, 0)} for hour in range(24)])
+    st.bar_chart(df,
+                 x="Часы",
+                 y="Количество сообщений",
+                 color="#1f77b4",
+                 horizontal=False)
+
+    st.subheader("Облако самых частых слов")
+    top_words_data = statistics['top_words']
+    freq = {item['word']: item['count'] for item in top_words_data}
+    wc = WordCloud(width=800, height=400, background_color='white', colormap='viridis').generate_from_frequencies(
+        freq)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.imshow(wc, interpolation='bilinear')
+    ax.axis('off')
+    st.pyplot(fig)
+
+    st.subheader("Облако самых частых фраз")
+    top_phrases = statistics['top_phrases']
+    freq = {item['phrase']: item['count'] for item in top_phrases}
+    wc = WordCloud(width=800, height=400, background_color='white', colormap='viridis').generate_from_frequencies(
+        freq)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.imshow(wc, interpolation='bilinear')
+    ax.axis('off')
+    st.pyplot(fig)
+
+
 
 def profile(runner : TelethonRunner, client : TelegramClient) -> None:
     pass
